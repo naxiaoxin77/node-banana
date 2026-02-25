@@ -316,6 +316,17 @@ export async function executeImageCompare(ctx: NodeExecutionContext): Promise<vo
 }
 
 /**
+ * Router node: pure passthrough with brief status flash.
+ */
+export async function executeRouter(ctx: NodeExecutionContext): Promise<void> {
+  // Router is pure passthrough — data flows via edge traversal in getConnectedInputs.
+  // Brief status flash to show execution occurred.
+  ctx.updateNodeData(ctx.node.id, { status: "loading" });
+  await new Promise(resolve => setTimeout(resolve, 50));
+  ctx.updateNodeData(ctx.node.id, { status: "complete" });
+}
+
+/**
  * GLB Viewer node: receives 3D model URL from upstream, fetches and loads it.
  */
 export async function executeGlbViewer(ctx: NodeExecutionContext): Promise<void> {

@@ -18,6 +18,7 @@ import {
   EaseCurveNodeData,
   VideoTrimNodeData,
   VideoFrameGrabNodeData,
+  RouterNodeData,
   GLBViewerNodeData,
   WorkflowNodeData,
   GroupColor,
@@ -49,6 +50,7 @@ export const defaultNodeDimensions: Record<NodeType, { width: number; height: nu
   easeCurve: { width: 340, height: 480 },
   videoTrim: { width: 360, height: 360 },
   videoFrameGrab: { width: 320, height: 320 },
+  router: { width: 200, height: 80 },
   glbViewer: { width: 360, height: 380 },
 };
 
@@ -283,6 +285,8 @@ export const createDefaultNodeData = (type: NodeType): WorkflowNodeData => {
         status: "idle",
         error: null,
       } as VideoFrameGrabNodeData;
+    case "router":
+      return {} as RouterNodeData;
     case "glbViewer":
       return {
         glbUrl: null,

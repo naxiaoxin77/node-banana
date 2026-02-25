@@ -31,6 +31,7 @@ const VALID_NODE_TYPES: NodeType[] = [
   "easeCurve",
   "videoTrim",
   "videoFrameGrab",
+  "router",
   "glbViewer",
 ];
 
@@ -57,6 +58,7 @@ const DEFAULT_DIMENSIONS: Record<NodeType, { width: number; height: number }> = 
   easeCurve: { width: 340, height: 480 },
   videoTrim: { width: 360, height: 360 },
   videoFrameGrab: { width: 320, height: 320 },
+  router: { width: 200, height: 80 },
   glbViewer: { width: 360, height: 380 },
 };
 
@@ -387,6 +389,8 @@ function createDefaultNodeData(type: NodeType): WorkflowNodeData {
         status: "idle",
         error: null,
       };
+    case "router":
+      return {};
     case "glbViewer":
       return {
         glbUrl: null,

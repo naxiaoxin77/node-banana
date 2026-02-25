@@ -41,6 +41,7 @@ export type NodeType =
   | "easeCurve"
   | "videoTrim"
   | "videoFrameGrab"
+  | "router"
   | "generate3d"
   | "glbViewer";
 
@@ -350,6 +351,13 @@ export interface VideoFrameGrabNodeData extends BaseNodeData {
 }
 
 /**
+ * Router node - pure passthrough routing node with dynamic multi-type handles
+ */
+export interface RouterNodeData extends BaseNodeData {
+  // No internal state - all routing is derived from edge connections
+}
+
+/**
  * Split Grid node - splits image into grid cells for parallel processing
  */
 export interface SplitGridNodeData extends BaseNodeData {
@@ -407,6 +415,7 @@ export type WorkflowNodeData =
   | EaseCurveNodeData
   | VideoTrimNodeData
   | VideoFrameGrabNodeData
+  | RouterNodeData
   | GLBViewerNodeData;
 
 /**
