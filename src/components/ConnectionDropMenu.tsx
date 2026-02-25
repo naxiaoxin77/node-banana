@@ -100,6 +100,15 @@ const IMAGE_TARGET_OPTIONS: MenuOption[] = [
       </svg>
     ),
   },
+  {
+    type: "switch",
+    label: "Switch",
+    icon: (
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+      </svg>
+    ),
+  },
 ];
 
 const TEXT_TARGET_OPTIONS: MenuOption[] = [
@@ -178,6 +187,15 @@ const TEXT_TARGET_OPTIONS: MenuOption[] = [
       </svg>
     ),
   },
+  {
+    type: "switch",
+    label: "Switch",
+    icon: (
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+      </svg>
+    ),
+  },
 ];
 
 // Define which nodes can provide sources for handle types (when dragging to a target handle)
@@ -236,6 +254,15 @@ const IMAGE_SOURCE_OPTIONS: MenuOption[] = [
         <circle cx="18" cy="6" r="3" />
         <circle cx="6" cy="18" r="3" />
         <path d="M18 9a9 9 0 0 1-9 9" />
+      </svg>
+    ),
+  },
+  {
+    type: "switch",
+    label: "Switch",
+    icon: (
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
       </svg>
     ),
   },
@@ -360,6 +387,15 @@ const VIDEO_TARGET_OPTIONS: MenuOption[] = [
       </svg>
     ),
   },
+  {
+    type: "switch",
+    label: "Switch",
+    icon: (
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+      </svg>
+    ),
+  },
 ];
 
 // GenerateVideo and VideoStitch nodes produce video output
@@ -412,6 +448,15 @@ const VIDEO_SOURCE_OPTIONS: MenuOption[] = [
       </svg>
     ),
   },
+  {
+    type: "switch",
+    label: "Switch",
+    icon: (
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+      </svg>
+    ),
+  },
 ];
 
 // Audio target options (nodes that accept audio input)
@@ -455,6 +500,15 @@ const AUDIO_TARGET_OPTIONS: MenuOption[] = [
       </svg>
     ),
   },
+  {
+    type: "switch",
+    label: "Switch",
+    icon: (
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+      </svg>
+    ),
+  },
 ];
 
 // Audio source options (nodes that produce audio output)
@@ -486,6 +540,15 @@ const AUDIO_SOURCE_OPTIONS: MenuOption[] = [
         <circle cx="18" cy="6" r="3" />
         <circle cx="6" cy="18" r="3" />
         <path d="M18 9a9 9 0 0 1-9 9" />
+      </svg>
+    ),
+  },
+  {
+    type: "switch",
+    label: "Switch",
+    icon: (
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
       </svg>
     ),
   },
