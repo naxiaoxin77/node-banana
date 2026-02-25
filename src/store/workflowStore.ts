@@ -933,7 +933,7 @@ const workflowStoreImpl: StateCreator<WorkflowStore> = (set, get) => ({
       if (dimmedNodeIds.has(node.id)) {
         // Skip execution — node is dimmed
         // Keep previous output visible (don't clear node data)
-        logger.info('workflow.skip', 'Node skipped (downstream of disabled Switch)', {
+        logger.info('node.execution', 'Node skipped (downstream of disabled Switch)', {
           nodeId: node.id,
           nodeType: node.type,
         });
