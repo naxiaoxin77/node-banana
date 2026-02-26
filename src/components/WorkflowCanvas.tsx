@@ -42,6 +42,7 @@ import {
   VideoFrameGrabNode,
   RouterNode,
   SwitchNode,
+  ConditionalSwitchNode,
 } from "./nodes";
 
 // Lazy-load GLBViewerNode to avoid bundling three.js for users who don't use 3D nodes
@@ -84,6 +85,7 @@ const nodeTypes: NodeTypes = {
   videoFrameGrab: VideoFrameGrabNode,
   router: RouterNode,
   switch: SwitchNode,
+  conditionalSwitch: ConditionalSwitchNode,
   glbViewer: GLBViewerNode,
 };
 
@@ -164,6 +166,9 @@ const getNodeHandles = (nodeType: string): { inputs: string[]; outputs: string[]
       // Switch has one input handle (generic-input when disconnected, typed when connected)
       // Output handles are dynamic based on switches array, all matching inputType
       return { inputs: ["generic-input"], outputs: [] }; // Outputs handled dynamically in SwitchNode
+    case "conditionalSwitch":
+      // Conditional Switch has one text input and dynamic rule outputs + default
+      return { inputs: ["text"], outputs: [] }; // Outputs handled dynamically in ConditionalSwitchNode
     case "glbViewer":
       return { inputs: ["3d"], outputs: ["image"] };
     default:
@@ -363,6 +368,14 @@ export function WorkflowCanvas() {
         }
         // If inputType not set yet, allow connection (will be resolved)
         return true;
+      }
+
+      // Conditional Switch: text input only, text outputs only
+      if (targetNode?.type === "conditionalSwitch") {
+        return sourceType === "text";
+      }
+      if (sourceNode?.type === "conditionalSwitch") {
+        return targetType === "text";
       }
 
       // If we can't determine types, allow the connection
@@ -661,6 +674,20 @@ export function WorkflowCanvas() {
             if (firstEnabled) return firstEnabled.id;
           }
           return null;
+        }
+
+        // Conditional Switch: text input, dynamic rule outputs
+        if (node.type === "conditionalSwitch" && handleType === "text") {
+          if (needInput) {
+            return "text";
+          } else {
+            // Return first rule ID from node data
+            const condData = node.data as { rules?: Array<{ id: string }> };
+            if (condData.rules && condData.rules.length > 0) {
+              return condData.rules[0].id;
+            }
+            return "default";
+          }
         }
 
         // Fall back to static handles
@@ -969,6 +996,17 @@ export function WorkflowCanvas() {
         }
         // Switch outputs use dynamic handle IDs (switch entry IDs)
         sourceHandleIdForNewNode = null;
+      } else if (nodeType === "conditionalSwitch") {
+        // Conditional Switch: text input and dynamic rule outputs
+        targetHandleId = "text";
+        // Source handle is the first rule ID or "default"
+        const nodeDataCheck = nodes.find(n => n.id === newNodeId);
+        if (nodeDataCheck && nodeDataCheck.data) {
+          const condData = nodeDataCheck.data as { rules?: Array<{ id: string }> };
+          sourceHandleIdForNewNode = condData.rules && condData.rules.length > 0 ? condData.rules[0].id : "default";
+        } else {
+          sourceHandleIdForNewNode = "default";
+        }
       } else if (handleType === "image") {
         if (nodeType === "annotation" || nodeType === "output" || nodeType === "splitGrid" || nodeType === "outputGallery" || nodeType === "imageCompare") {
           targetHandleId = "image";
@@ -1899,6 +1937,8 @@ export function WorkflowCanvas() {
                 return "#6b7280"; // neutral-500 (gray/slate utility theme)
               case "switch":
                 return "#8b5cf6"; // violet-500 (distinct from Router)
+              case "conditionalSwitch":
+                return "#06b6d4"; // cyan-500 (distinct from Router gray and Switch violet)
               case "glbViewer":
                 return "#0ea5e9"; // sky-500 (3D viewport)
               default:
