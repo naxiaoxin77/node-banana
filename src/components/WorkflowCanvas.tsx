@@ -294,8 +294,8 @@ export function WorkflowCanvas() {
   // Apply dimming className to nodes downstream of disabled Switch outputs
   const allNodes = useMemo(() => {
     return nodes.map((node) => {
-      // Never dim Switch nodes themselves
-      if (node.type === "switch") return node;
+      // Never dim Switch or ConditionalSwitch nodes themselves
+      if (node.type === "switch" || node.type === "conditionalSwitch") return node;
 
       const isDimmed = dimmedNodeIds.has(node.id);
       const dimClass = isDimmed ? "switch-dimmed" : "";

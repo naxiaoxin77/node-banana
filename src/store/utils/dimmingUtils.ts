@@ -1,4 +1,4 @@
-import type { WorkflowNode, WorkflowEdge, SwitchNodeData } from "@/types";
+import type { WorkflowNode, WorkflowEdge, SwitchNodeData, ConditionalSwitchNodeData } from "@/types";
 
 /**
  * Compute set of node IDs that should be visually dimmed.
@@ -13,23 +13,53 @@ export function computeDimmedNodes(
   const potentiallyDimmed = new Set<string>();
 
   nodes.forEach(node => {
-    if (node.type !== "switch") return;
-    const switchData = node.data as SwitchNodeData;
-    if (!switchData.switches) return;
+    if (node.type === "switch") {
+      const switchData = node.data as SwitchNodeData;
+      if (!switchData.switches) return;
 
-    switchData.switches.forEach(sw => {
-      if (sw.enabled) return; // Only process disabled switches
+      switchData.switches.forEach(sw => {
+        if (sw.enabled) return; // Only process disabled switches
 
-      // Find edges from this disabled output handle
-      const disabledEdges = edges.filter(
-        e => e.source === node.id && e.sourceHandle === sw.id
-      );
+        // Find edges from this disabled output handle
+        const disabledEdges = edges.filter(
+          e => e.source === node.id && e.sourceHandle === sw.id
+        );
 
-      // DFS traverse downstream from each disabled edge target
-      disabledEdges.forEach(edge => {
-        traverseDownstream(edge.target, edges, potentiallyDimmed);
+        // DFS traverse downstream from each disabled edge target
+        disabledEdges.forEach(edge => {
+          traverseDownstream(edge.target, edges, potentiallyDimmed);
+        });
       });
-    });
+    }
+
+    if (node.type === "conditionalSwitch") {
+      const condData = node.data as ConditionalSwitchNodeData;
+      if (!condData.rules) return;
+
+      // Non-matching rules: their downstream should be dimmed
+      condData.rules.forEach(rule => {
+        if (rule.isMatched) return; // Only process non-matching rules
+
+        const disabledEdges = edges.filter(
+          e => e.source === node.id && e.sourceHandle === rule.id
+        );
+
+        disabledEdges.forEach(edge => {
+          traverseDownstream(edge.target, edges, potentiallyDimmed);
+        });
+      });
+
+      // Default output: dimmed when ANY rule matches (because default only active when NO rules match)
+      const anyRuleMatches = condData.rules.some(r => r.isMatched);
+      if (anyRuleMatches) {
+        const defaultEdges = edges.filter(
+          e => e.source === node.id && e.sourceHandle === "default"
+        );
+        defaultEdges.forEach(edge => {
+          traverseDownstream(edge.target, edges, potentiallyDimmed);
+        });
+      }
+    }
   });
 
   // Step 2: Type-aware smart cascade — only un-dim if an active input replaces
@@ -41,7 +71,7 @@ export function computeDimmedNodes(
     const incomingEdges = edges.filter(e => e.target === nodeId);
 
     // Collect which handle types are blocked on this node
-    // (from disabled Switch outputs or from transitively dimmed sources)
+    // (from disabled Switch outputs, non-matching ConditionalSwitch outputs, or from transitively dimmed sources)
     const blockedTypes = new Set<string>();
     incomingEdges.forEach(edge => {
       const sourceNode = nodes.find(n => n.id === edge.source);
@@ -49,6 +79,23 @@ export function computeDimmedNodes(
         const switchData = sourceNode.data as SwitchNodeData;
         const switchEntry = switchData.switches?.find(s => s.id === edge.sourceHandle);
         if (switchEntry && !switchEntry.enabled && edge.targetHandle) {
+          blockedTypes.add(edge.targetHandle);
+        }
+      } else if (sourceNode?.type === "conditionalSwitch") {
+        const condData = sourceNode.data as ConditionalSwitchNodeData;
+        const rule = condData.rules?.find(r => r.id === edge.sourceHandle);
+        const isDefaultHandle = edge.sourceHandle === "default";
+
+        // Check if this output is inactive
+        let isInactive = false;
+        if (rule) {
+          isInactive = !rule.isMatched;
+        } else if (isDefaultHandle) {
+          // Default is inactive when any rule matches
+          isInactive = condData.rules?.some(r => r.isMatched) ?? false;
+        }
+
+        if (isInactive && edge.targetHandle) {
           blockedTypes.add(edge.targetHandle);
         }
       } else if (potentiallyDimmed.has(edge.source) && edge.targetHandle) {
@@ -66,6 +113,23 @@ export function computeDimmedNodes(
         const switchData = sourceNode.data as SwitchNodeData;
         const switchEntry = switchData.switches?.find(s => s.id === edge.sourceHandle);
         if (switchEntry && !switchEntry.enabled) return false;
+      }
+      // Skip non-matching ConditionalSwitch outputs
+      if (sourceNode?.type === "conditionalSwitch") {
+        const condData = sourceNode.data as ConditionalSwitchNodeData;
+        const rule = condData.rules?.find(r => r.id === edge.sourceHandle);
+        const isDefaultHandle = edge.sourceHandle === "default";
+
+        // Check if this output is inactive
+        let isInactive = false;
+        if (rule) {
+          isInactive = !rule.isMatched;
+        } else if (isDefaultHandle) {
+          // Default is inactive when any rule matches
+          isInactive = condData.rules?.some(r => r.isMatched) ?? false;
+        }
+
+        if (isInactive) return false;
       }
       // Active input — only counts if it provides a blocked type
       return edge.targetHandle ? blockedTypes.has(edge.targetHandle) : false;
