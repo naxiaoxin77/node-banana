@@ -6,6 +6,7 @@ import {
   Output,
   VideoSampleSink,
   VideoSampleSource,
+  AudioBufferSink,
   AudioBufferSource,
   BlobSource,
   ALL_FORMATS,
@@ -181,12 +182,135 @@ function trimAudioBuffer(buffer: AudioBuffer, targetDuration: number): AudioBuff
 }
 
 /**
+ * Extract audio from a video blob.
+ * Returns AudioBuffer if audio track exists, null otherwise.
+ */
+async function extractAudioFromVideo(
+  videoBlob: Blob,
+  onProgress?: (message: string) => void
+): Promise<AudioBuffer | null> {
+  let blobSource: BlobSource | undefined;
+  let input: Input | undefined;
+  let sink: AudioBufferSink | undefined;
+
+  try {
+    blobSource = new BlobSource(videoBlob);
+    input = new Input({ source: blobSource, formats: ALL_FORMATS });
+
+    const audioTrack = await input.getPrimaryAudioTrack();
+    if (!audioTrack) {
+      return null;
+    }
+
+    const decodable = await audioTrack.canDecode();
+    if (!decodable) {
+      return null;
+    }
+
+    onProgress?.('Decoding audio...');
+    sink = new AudioBufferSink(audioTrack);
+    const audioDuration = await input.computeDuration();
+
+    const decodedBuffers: AudioBuffer[] = [];
+    for await (const wrappedBuffer of sink.buffers(0, audioDuration)) {
+      if (wrappedBuffer?.buffer) {
+        decodedBuffers.push(wrappedBuffer.buffer);
+      }
+    }
+
+    if (decodedBuffers.length === 0) {
+      return null;
+    }
+
+    const sampleRate = decodedBuffers[0].sampleRate;
+    const channels = decodedBuffers[0].numberOfChannels;
+    const totalLength = decodedBuffers.reduce((sum, buf) => sum + buf.length, 0);
+
+    const mergedBuffer = new AudioBuffer({
+      length: totalLength,
+      numberOfChannels: channels,
+      sampleRate,
+    });
+
+    let offset = 0;
+    for (const buffer of decodedBuffers) {
+      for (let ch = 0; ch < channels; ch++) {
+        mergedBuffer.getChannelData(ch).set(buffer.getChannelData(ch), offset);
+      }
+      offset += buffer.length;
+    }
+
+    return mergedBuffer;
+  } catch (error) {
+    console.warn('[VideoStitch] Failed to extract audio from video:', error);
+    return null;
+  } finally {
+    const closeable = (obj: unknown): obj is { close(): Promise<void> } =>
+      obj != null && typeof (obj as { close?: () => Promise<void> }).close === 'function';
+    if (closeable(sink)) {
+      try {
+        await sink.close();
+      } catch {
+        // ignore
+      }
+    }
+    if (closeable(input)) {
+      try {
+        await input.close();
+      } catch {
+        // ignore
+      }
+    }
+    if (closeable(blobSource)) {
+      try {
+        await blobSource.close();
+      } catch {
+        // ignore
+      }
+    }
+  }
+}
+
+/**
+ * Concatenate multiple AudioBuffers in order.
+ */
+function concatenateAudioBuffers(buffers: AudioBuffer[]): AudioBuffer {
+  if (buffers.length === 0) {
+    throw new Error('No audio buffers to concatenate');
+  }
+  if (buffers.length === 1) {
+    return buffers[0];
+  }
+
+  const sampleRate = buffers[0].sampleRate;
+  const channels = buffers[0].numberOfChannels;
+  const totalLength = buffers.reduce((sum, buf) => sum + buf.length, 0);
+
+  const mergedBuffer = new AudioBuffer({
+    length: totalLength,
+    numberOfChannels: channels,
+    sampleRate,
+  });
+
+  let offset = 0;
+  for (const buffer of buffers) {
+    for (let ch = 0; ch < channels; ch++) {
+      mergedBuffer.getChannelData(ch).set(buffer.getChannelData(ch), offset);
+    }
+    offset += buffer.length;
+  }
+
+  return mergedBuffer;
+}
+
+/**
  * Standalone async function to stitch multiple video blobs together sequentially
  */
 export async function stitchVideosAsync(
   videoBlobs: Blob[],
   audioData?: AudioData | null,
-  onProgress?: (progress: StitchProgress) => void
+  onProgress?: (progress: StitchProgress) => void,
+  options?: { autoExtractAudio?: boolean }
 ): Promise<Blob> {
   try {
     // Initialize progress
@@ -218,6 +342,50 @@ export async function stitchVideosAsync(
       };
       onProgress?.(p);
     };
+
+    // Auto-extract audio from videos if requested and no external audio provided
+    const autoExtractAudio = options?.autoExtractAudio ?? true;
+    const extractedAudioBuffers: AudioBuffer[] = [];
+
+    if (autoExtractAudio && !audioData) {
+      updateProgress('processing', 'Extracting audio from videos...', 3);
+
+      for (let i = 0; i < videoBlobs.length; i++) {
+        const audioBuffer = await extractAudioFromVideo(videoBlobs[i], (msg) => {
+          updateProgress(
+            'processing',
+            `Video ${i + 1}/${videoBlobs.length}: ${msg}`,
+            3 + (i / videoBlobs.length) * 5
+          );
+        });
+
+        if (audioBuffer) {
+          extractedAudioBuffers.push(audioBuffer);
+          console.log(
+            `[VideoStitch] Extracted ${audioBuffer.duration.toFixed(1)}s audio from video ${i + 1}`
+          );
+        } else {
+          console.log(`[VideoStitch] No audio found in video ${i + 1}`);
+        }
+      }
+
+      if (extractedAudioBuffers.length > 0) {
+        try {
+          const mergedAudio = concatenateAudioBuffers(extractedAudioBuffers);
+          audioData = {
+            buffer: mergedAudio,
+            duration: mergedAudio.duration,
+          };
+          console.log(
+            `[VideoStitch] Combined ${extractedAudioBuffers.length} audio tracks, total duration: ${mergedAudio.duration.toFixed(1)}s`
+          );
+        } catch (error) {
+          console.warn('[VideoStitch] Failed to concatenate audio tracks:', error);
+        }
+      } else {
+        console.log('[VideoStitch] No audio tracks found in any video');
+      }
+    }
 
     updateProgress('processing', 'Analyzing video metadata...', 5);
     const {
