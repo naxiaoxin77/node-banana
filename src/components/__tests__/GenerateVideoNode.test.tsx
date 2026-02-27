@@ -30,9 +30,12 @@ vi.mock("@/store/workflowStore", () => ({
     replicateApiKey: null,
     falApiKey: null,
     kieApiKey: null,
+    klingAccessKey: null,
+    klingSecretKey: null,
     wavespeedApiKey: null,
     replicateEnabled: false,
     kieEnabled: false,
+    klingEnabled: false,
   }),
 }));
 
@@ -87,6 +90,7 @@ const defaultProviderSettings: ProviderSettings = {
     replicate: { id: "replicate", name: "Replicate", enabled: false, apiKey: null },
     fal: { id: "fal", name: "fal.ai", enabled: true, apiKey: null },
     kie: { id: "kie", name: "Kie.ai", enabled: false, apiKey: null },
+    kling: { id: "kling", name: "Kling", enabled: false, apiKey: null, apiSecret: null },
     wavespeed: { id: "wavespeed", name: "WaveSpeed", enabled: false, apiKey: null },
   },
 };
@@ -143,6 +147,14 @@ describe("GenerateVideoNode", () => {
     type: "generateVideo" as const,
     data: createNodeData(data),
     selected: false,
+    dragging: false,
+    zIndex: 0,
+    selectable: true,
+    deletable: true,
+    draggable: true,
+    isConnectable: true,
+    positionAbsoluteX: 0,
+    positionAbsoluteY: 0,
   });
 
   describe("Basic Rendering", () => {

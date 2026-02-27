@@ -2,18 +2,24 @@ import { describe, it, expect } from "vitest";
 import { buildGenerateHeaders, buildLlmHeaders } from "../buildApiHeaders";
 import type { ProviderSettings } from "@/types";
 
-function makeSettings(overrides: Partial<Record<string, { apiKey: string | null }>> = {}): ProviderSettings {
-  const defaults: Record<string, { id: string; name: string; enabled: boolean; apiKey: string | null }> = {
+function makeSettings(overrides: Partial<Record<string, { apiKey: string | null; apiSecret?: string | null }>> = {}): ProviderSettings {
+  const defaults: Record<string, { id: string; name: string; enabled: boolean; apiKey: string | null; apiSecret?: string | null }> = {
     gemini: { id: "gemini", name: "Gemini", enabled: true, apiKey: null },
     replicate: { id: "replicate", name: "Replicate", enabled: true, apiKey: null },
     fal: { id: "fal", name: "fal.ai", enabled: true, apiKey: null },
     kie: { id: "kie", name: "Kie.ai", enabled: true, apiKey: null },
+    kling: { id: "kling", name: "Kling", enabled: true, apiKey: null, apiSecret: null },
     wavespeed: { id: "wavespeed", name: "WaveSpeed", enabled: true, apiKey: null },
     openai: { id: "openai", name: "OpenAI", enabled: true, apiKey: null },
   };
   for (const [key, val] of Object.entries(overrides)) {
     if (defaults[key]) {
-      defaults[key].apiKey = val.apiKey;
+      if (val) {
+        defaults[key].apiKey = val.apiKey;
+        if (val.apiSecret !== undefined) {
+          defaults[key].apiSecret = val.apiSecret;
+        }
+      }
     }
   }
   return { providers: defaults } as unknown as ProviderSettings;
@@ -47,6 +53,13 @@ describe("buildGenerateHeaders", () => {
     const settings = makeSettings({ kie: { apiKey: "kie-key" } });
     const headers = buildGenerateHeaders("kie", settings);
     expect(headers["X-Kie-Key"]).toBe("kie-key");
+  });
+
+  it("should add Kling API key headers", () => {
+    const settings = makeSettings({ kling: { apiKey: "kling-access", apiSecret: "kling-secret" } });
+    const headers = buildGenerateHeaders("kling", settings);
+    expect(headers["X-Kling-Access-Key"]).toBe("kling-access");
+    expect(headers["X-Kling-Secret-Key"]).toBe("kling-secret");
   });
 
   it("should add WaveSpeed API key header", () => {

@@ -1,13 +1,13 @@
 /**
  * Unified Models API Endpoint
  *
- * Aggregates models from all configured providers (Replicate, fal.ai, Gemini, WaveSpeed).
+ * Aggregates models from all configured providers (Replicate, fal.ai, Gemini, WaveSpeed, Kling).
  * Uses in-memory caching to reduce external API calls.
  *
  * GET /api/models
  *
  * Query params:
- *   - provider: Optional, filter to specific provider ("replicate" | "fal" | "gemini" | "wavespeed")
+ *   - provider: Optional, filter to specific provider ("replicate" | "fal" | "gemini" | "wavespeed" | "kie" | "kling")
  *   - search: Optional, search query
  *   - refresh: Optional, bypass cache if "true"
  *   - capabilities: Optional, filter by capabilities (comma-separated)
@@ -15,6 +15,8 @@
  * Headers:
  *   - X-Replicate-Key: Replicate API key
  *   - X-Fal-Key: fal.ai API key (optional, works without but rate limited)
+ *   - X-Kling-Access-Key: Kling API access key
+ *   - X-Kling-Secret-Key: Kling API secret key
  *   - X-WaveSpeed-Key: WaveSpeed API key
  *
  * Response:
@@ -306,6 +308,82 @@ const KIE_MODELS: ProviderModel[] = [
     capabilities: ["image-to-video"],
     coverImage: undefined,
     pageUrl: "https://docs.kie.ai/veo3-api/quickstart",
+  },
+];
+
+// Kling official models (hardcoded)
+const KLING_MODELS: ProviderModel[] = [
+  {
+    id: "kling-official/v1-text-to-video",
+    name: "Kling V1 (T2V)",
+    description: "Kling official text-to-video model v1.",
+    provider: "kling",
+    capabilities: ["text-to-video"],
+    coverImage: undefined,
+    pageUrl: "https://app.klingai.com/global/dev/document-api/apiReference/commonInfo",
+  },
+  {
+    id: "kling-official/v1-image-to-video",
+    name: "Kling V1 (I2V)",
+    description: "Kling official image-to-video model v1.",
+    provider: "kling",
+    capabilities: ["image-to-video"],
+    coverImage: undefined,
+    pageUrl: "https://app.klingai.com/global/dev/document-api/apiReference/commonInfo",
+  },
+  {
+    id: "kling-official/v1-6-text-to-video",
+    name: "Kling V1.6 (T2V)",
+    description: "Kling official text-to-video model v1.6.",
+    provider: "kling",
+    capabilities: ["text-to-video"],
+    coverImage: undefined,
+    pageUrl: "https://app.klingai.com/global/dev/document-api/apiReference/commonInfo",
+  },
+  {
+    id: "kling-official/v1-6-image-to-video",
+    name: "Kling V1.6 (I2V)",
+    description: "Kling official image-to-video model v1.6.",
+    provider: "kling",
+    capabilities: ["image-to-video"],
+    coverImage: undefined,
+    pageUrl: "https://app.klingai.com/global/dev/document-api/apiReference/commonInfo",
+  },
+  {
+    id: "kling-official/v2-master-text-to-video",
+    name: "Kling V2 Master (T2V)",
+    description: "Kling official text-to-video model v2 master.",
+    provider: "kling",
+    capabilities: ["text-to-video"],
+    coverImage: undefined,
+    pageUrl: "https://app.klingai.com/global/dev/document-api/apiReference/commonInfo",
+  },
+  {
+    id: "kling-official/v2-master-image-to-video",
+    name: "Kling V2 Master (I2V)",
+    description: "Kling official image-to-video model v2 master.",
+    provider: "kling",
+    capabilities: ["image-to-video"],
+    coverImage: undefined,
+    pageUrl: "https://app.klingai.com/global/dev/document-api/apiReference/commonInfo",
+  },
+  {
+    id: "kling-official/v2-6-text-to-video",
+    name: "Kling V2.6 (T2V)",
+    description: "Kling official text-to-video model v2.6.",
+    provider: "kling",
+    capabilities: ["text-to-video"],
+    coverImage: undefined,
+    pageUrl: "https://app.klingai.com/global/dev/document-api/apiReference/commonInfo",
+  },
+  {
+    id: "kling-official/v2-6-image-to-video",
+    name: "Kling V2.6 (I2V)",
+    description: "Kling official image-to-video model v2.6.",
+    provider: "kling",
+    capabilities: ["image-to-video"],
+    coverImage: undefined,
+    pageUrl: "https://app.klingai.com/global/dev/document-api/apiReference/commonInfo",
   },
 ];
 
@@ -765,12 +843,15 @@ export async function GET(
   const replicateKey = request.headers.get("X-Replicate-Key") || process.env.REPLICATE_API_KEY || null;
   const falKey = request.headers.get("X-Fal-Key") || process.env.FAL_API_KEY || null;
   const kieKey = request.headers.get("X-Kie-Key") || process.env.KIE_API_KEY || null;
+  const klingAccessKey = request.headers.get("X-Kling-Access-Key") || process.env.KLING_ACCESS_KEY || null;
+  const klingSecretKey = request.headers.get("X-Kling-Secret-Key") || process.env.KLING_SECRET_KEY || null;
   const wavespeedKey = request.headers.get("X-WaveSpeed-Key") || process.env.WAVESPEED_API_KEY || null;
 
   // Determine which providers to fetch from (excluding gemini/kie - handled separately as hardcoded)
   const providersToFetch: ProviderType[] = [];
   let includeGemini = false;
   let includeKie = false;
+  let includeKling = false;
 
   if (providerFilter) {
     if (providerFilter === "gemini") {
@@ -779,6 +860,20 @@ export async function GET(
     } else if (providerFilter === "kie") {
       // Only Kie requested - no external API calls needed (hardcoded models)
       includeKie = true;
+    } else if (providerFilter === "kling") {
+      // Only Kling requested - no external API calls needed (hardcoded models)
+      if (klingAccessKey && klingSecretKey) {
+        includeKling = true;
+      } else {
+        return NextResponse.json<ModelsErrorResponse>(
+          {
+            success: false,
+            error:
+              "Kling API keys required. Add KLING_ACCESS_KEY and KLING_SECRET_KEY to .env.local or configure in Settings.",
+          },
+          { status: 400 }
+        );
+      }
     } else if (providerFilter === "wavespeed") {
       if (wavespeedKey) {
         // WaveSpeed requested with key - fetch from API
@@ -803,6 +898,7 @@ export async function GET(
     // Include all providers that have keys configured
     includeGemini = true; // Gemini always available
     includeKie = kieKey ? true : false; // Kie only if API key is configured
+    includeKling = klingAccessKey && klingSecretKey ? true : false; // Kling only if keys configured
     if (wavespeedKey) {
       providersToFetch.push("wavespeed"); // WaveSpeed if key is configured
     }
@@ -815,12 +911,12 @@ export async function GET(
   }
 
   // Gemini and Kie are always available (with key for Kie), so we don't fail if no external providers
-  if (providersToFetch.length === 0 && !includeGemini && !includeKie) {
+  if (providersToFetch.length === 0 && !includeGemini && !includeKie && !includeKling) {
     return NextResponse.json<ModelsErrorResponse>(
       {
         success: false,
         error:
-          "No providers available. Add REPLICATE_API_KEY, FAL_API_KEY, KIE_API_KEY, or WAVESPEED_API_KEY to .env.local or configure in Settings.",
+          "No providers available. Add REPLICATE_API_KEY, FAL_API_KEY, KIE_API_KEY, KLING_ACCESS_KEY/SECRET_KEY, or WAVESPEED_API_KEY to .env.local or configure in Settings.",
       },
       { status: 400 }
     );
@@ -860,6 +956,21 @@ export async function GET(
       success: true,
       count: kieModels.length,
       cached: true, // Hardcoded models are effectively "cached"
+    };
+    anyFromCache = true;
+  }
+
+  // Add Kling models if included (hardcoded, no API call needed)
+  if (includeKling) {
+    let klingModels = KLING_MODELS;
+    if (searchQuery) {
+      klingModels = filterModelsBySearch(klingModels, searchQuery);
+    }
+    allModels.push(...klingModels);
+    providerResults["kling"] = {
+      success: true,
+      count: klingModels.length,
+      cached: true,
     };
     anyFromCache = true;
   }

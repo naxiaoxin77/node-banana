@@ -19,6 +19,7 @@ const defaultProviderSettings = {
     replicate: { apiKey: "" },
     fal: { apiKey: "" },
     kie: { apiKey: "" },
+    kling: { apiKey: "", apiSecret: "" },
     wavespeed: { apiKey: "" },
     openai: { apiKey: "" },
   },
@@ -73,7 +74,7 @@ describe("executeVideoStitch", () => {
         loopCount: 1,
         ...data,
       },
-    } as WorkflowNode;
+    } as unknown as WorkflowNode;
   }
 
   it("should error when encoder not supported", async () => {
@@ -152,7 +153,7 @@ describe("executeEaseCurve", () => {
         outputDuration: 5,
         ...data,
       },
-    } as WorkflowNode;
+    } as unknown as WorkflowNode;
   }
 
   it("should error when encoder not supported", async () => {

@@ -67,7 +67,7 @@ export function ModelParameters({
   const [error, setError] = useState<string | null>(null);
   const [isExpanded, setIsExpanded] = useState(true);
   // Use stable selector for API keys to prevent unnecessary re-fetches
-  const { replicateApiKey, falApiKey, kieApiKey, wavespeedApiKey } = useProviderApiKeys();
+  const { replicateApiKey, falApiKey, kieApiKey, klingAccessKey, klingSecretKey, wavespeedApiKey } = useProviderApiKeys();
 
   // Fetch schema when modelId changes
   useEffect(() => {
@@ -99,6 +99,12 @@ export function ModelParameters({
         }
         if (kieApiKey) {
           headers["X-Kie-Key"] = kieApiKey;
+        }
+        if (klingAccessKey) {
+          headers["X-Kling-Access-Key"] = klingAccessKey;
+        }
+        if (klingSecretKey) {
+          headers["X-Kling-Secret-Key"] = klingSecretKey;
         }
         if (wavespeedApiKey) {
           headers["X-WaveSpeed-Key"] = wavespeedApiKey;
@@ -137,7 +143,7 @@ export function ModelParameters({
     };
 
     fetchSchema();
-  }, [modelId, provider, replicateApiKey, falApiKey, kieApiKey, wavespeedApiKey, onInputsLoaded]);
+  }, [modelId, provider, replicateApiKey, falApiKey, kieApiKey, klingAccessKey, klingSecretKey, wavespeedApiKey, onInputsLoaded]);
 
   // Notify parent to resize node when schema loads and panel is expanded
   useEffect(() => {

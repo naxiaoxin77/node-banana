@@ -55,6 +55,18 @@ const WaveSpeedIcon = () => (
   </svg>
 );
 
+const KieIcon = () => (
+  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M6 3h3.5v7L17 3h4l-8 8.5L21 21h-4l-7.5-8.5V21H6V3z" />
+  </svg>
+);
+
+const KlingIcon = () => (
+  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M6 3h3.6v7.2L17.4 3H21l-7.2 7.8L21 21h-3.6l-7.8-8.7V21H6V3z" />
+  </svg>
+);
+
 // Get provider icon component
 const getProviderIcon = (provider: ProviderType) => {
   switch (provider) {
@@ -64,6 +76,10 @@ const getProviderIcon = (provider: ProviderType) => {
       return <ReplicateIcon />;
     case "fal":
       return <FalIcon />;
+    case "kie":
+      return <KieIcon />;
+    case "kling":
+      return <KlingIcon />;
     case "wavespeed":
       return <WaveSpeedIcon />;
     default:
@@ -91,6 +107,7 @@ export function ProjectSetupModal({
     setUseExternalImageStorage,
     providerSettings,
     updateProviderApiKey,
+    updateProviderApiSecret,
     toggleProvider,
     maxConcurrentCalls,
     setMaxConcurrentCalls,
@@ -115,6 +132,7 @@ export function ProjectSetupModal({
     replicate: false,
     fal: false,
     kie: false,
+    kling: false,
     wavespeed: false,
   });
   const [overrideActive, setOverrideActive] = useState<Record<ProviderType, boolean>>({
@@ -123,6 +141,7 @@ export function ProjectSetupModal({
     replicate: false,
     fal: false,
     kie: false,
+    kling: false,
     wavespeed: false,
   });
   const [envStatus, setEnvStatus] = useState<EnvStatusResponse | null>(null);
@@ -152,7 +171,7 @@ export function ProjectSetupModal({
 
       // Sync local providers state
       setLocalProviders(providerSettings);
-      setShowApiKey({ gemini: false, openai: false, replicate: false, fal: false, kie: false, wavespeed: false });
+      setShowApiKey({ gemini: false, openai: false, replicate: false, fal: false, kie: false, kling: false, wavespeed: false });
       // Initialize override as active if user already has a key set
       setOverrideActive({
         gemini: !!providerSettings.providers.gemini?.apiKey,
@@ -160,6 +179,7 @@ export function ProjectSetupModal({
         replicate: !!providerSettings.providers.replicate?.apiKey,
         fal: !!providerSettings.providers.fal?.apiKey,
         kie: !!providerSettings.providers.kie?.apiKey,
+        kling: !!providerSettings.providers.kling?.apiKey || !!providerSettings.providers.kling?.apiSecret,
         wavespeed: !!providerSettings.providers.wavespeed?.apiKey,
       });
       setError(null);
@@ -260,7 +280,7 @@ export function ProjectSetupModal({
 
   const handleSaveProviders = () => {
     // Save each provider's settings
-    const providerIds: ProviderType[] = ["gemini", "openai", "replicate", "fal", "kie", "wavespeed"];
+    const providerIds: ProviderType[] = ["gemini", "openai", "replicate", "fal", "kie", "kling", "wavespeed"];
     for (const providerId of providerIds) {
       const local = localProviders.providers[providerId];
       const current = providerSettings.providers[providerId];
@@ -275,6 +295,11 @@ export function ProjectSetupModal({
       // Update API key if changed
       if (local.apiKey !== current.apiKey) {
         updateProviderApiKey(providerId, local.apiKey);
+      }
+
+      // Update API secret if changed (Kling only)
+      if (local.apiSecret !== current.apiSecret) {
+        updateProviderApiSecret(providerId, local.apiSecret || null);
       }
     }
     onClose();
@@ -306,7 +331,7 @@ export function ProjectSetupModal({
 
   const updateLocalProvider = (
     providerId: ProviderType,
-    updates: { enabled?: boolean; apiKey?: string | null }
+    updates: { enabled?: boolean; apiKey?: string | null; apiSecret?: string | null }
   ) => {
     setLocalProviders((prev) => ({
       providers: {
@@ -655,6 +680,67 @@ export function ProjectSetupModal({
                         onClick={() => {
                           setOverrideActive((prev) => ({ ...prev, kie: false }));
                           updateLocalProvider("kie", { apiKey: null });
+                        }}
+                        className="text-xs text-neutral-500 hover:text-neutral-300"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Kling Provider */}
+            <div className="p-3 bg-neutral-900 rounded-lg border border-neutral-700">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <svg className="w-4 h-4 text-emerald-400" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M6 3h3.6v7.2L17.4 3H21l-7.2 7.8L21 21h-3.6l-7.8-8.7V21H6V3z" />
+                  </svg>
+                  <span className="text-sm font-medium text-neutral-100">Kling</span>
+                  <span className="text-xs text-neutral-500">(Official API)</span>
+                </div>
+                {envStatus?.kling && !overrideActive.kling ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-green-400">✓ From .env</span>
+                    <button
+                      type="button"
+                      onClick={() => setOverrideActive((prev) => ({ ...prev, kling: true }))}
+                      className="px-2 py-1 text-xs text-neutral-400 hover:text-neutral-200 transition-colors"
+                    >
+                      Override
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type={showApiKey.kling ? "text" : "password"}
+                      value={localProviders.providers.kling?.apiKey || ""}
+                      onChange={(e) => updateLocalProvider("kling", { apiKey: e.target.value || null })}
+                      placeholder="Access key"
+                      className="w-40 px-2 py-1 bg-neutral-800 border border-neutral-600 rounded text-neutral-100 text-xs focus:outline-none focus:border-neutral-500"
+                    />
+                    <input
+                      type={showApiKey.kling ? "text" : "password"}
+                      value={localProviders.providers.kling?.apiSecret || ""}
+                      onChange={(e) => updateLocalProvider("kling", { apiSecret: e.target.value || null })}
+                      placeholder="Secret key"
+                      className="w-40 px-2 py-1 bg-neutral-800 border border-neutral-600 rounded text-neutral-100 text-xs focus:outline-none focus:border-neutral-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowApiKey((prev) => ({ ...prev, kling: !prev.kling }))}
+                      className="text-xs text-neutral-400 hover:text-neutral-200"
+                    >
+                      {showApiKey.kling ? "Hide" : "Show"}
+                    </button>
+                    {envStatus?.kling && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setOverrideActive((prev) => ({ ...prev, kling: false }));
+                          updateLocalProvider("kling", { apiKey: null, apiSecret: null });
                         }}
                         className="text-xs text-neutral-500 hover:text-neutral-300"
                       >

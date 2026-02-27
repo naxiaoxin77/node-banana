@@ -15,7 +15,17 @@ import { getVideoDimensions, calculateNodeSizePreservingHeight } from "@/utils/n
 
 // Provider badge component - shows provider icon for all providers
 function ProviderBadge({ provider }: { provider: ProviderType }) {
-  const providerName = provider === "gemini" ? "Gemini" : provider === "replicate" ? "Replicate" : provider === "kie" ? "Kie.ai" : provider === "wavespeed" ? "WaveSpeed" : "fal.ai";
+  const providerName = provider === "gemini"
+    ? "Gemini"
+    : provider === "replicate"
+    ? "Replicate"
+    : provider === "kie"
+    ? "Kie.ai"
+    : provider === "kling"
+    ? "Kling"
+    : provider === "wavespeed"
+    ? "WaveSpeed"
+    : "fal.ai";
 
   return (
     <span className="text-neutral-500 shrink-0" title={providerName}>
@@ -32,6 +42,10 @@ function ProviderBadge({ provider }: { provider: ProviderType }) {
       ) : provider === "kie" ? (
         <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
           <path d="M6 3h3.5v7L17 3h4l-8 8.5L21 21h-4l-7.5-8.5V21H6V3z" />
+        </svg>
+      ) : provider === "kling" ? (
+        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M6 3h3.6v7.2L17.4 3H21l-7.2 7.8L21 21h-3.6l-7.8-8.7V21H6V3z" />
         </svg>
       ) : provider === "wavespeed" ? (
         <svg className="w-4 h-4" viewBox="95 140 350 230" fill="currentColor">
@@ -58,7 +72,16 @@ export function GenerateVideoNode({ id, data, selected }: NodeProps<GenerateVide
   const commentNavigation = useCommentNavigation(id);
   const updateNodeData = useWorkflowStore((state) => state.updateNodeData);
   // Use stable selector for API keys to prevent unnecessary re-fetches
-  const { replicateApiKey, falApiKey, kieApiKey, replicateEnabled, kieEnabled } = useProviderApiKeys();
+  const {
+    replicateApiKey,
+    falApiKey,
+    kieApiKey,
+    klingAccessKey,
+    klingSecretKey,
+    replicateEnabled,
+    kieEnabled,
+    klingEnabled,
+  } = useProviderApiKeys();
   const generationsPath = useWorkflowStore((state) => state.generationsPath);
   const [externalModels, setExternalModels] = useState<ProviderModel[]>([]);
   const [isLoadingModels, setIsLoadingModels] = useState(false);
@@ -82,8 +105,12 @@ export function GenerateVideoNode({ id, data, selected }: NodeProps<GenerateVide
     if (kieEnabled && kieApiKey) {
       providers.push({ id: "kie", name: "Kie.ai" });
     }
+    // Add Kling if configured
+    if (klingEnabled && klingAccessKey && klingSecretKey) {
+      providers.push({ id: "kling", name: "Kling" });
+    }
     return providers;
-  }, [replicateEnabled, replicateApiKey, kieEnabled, kieApiKey]);
+  }, [replicateEnabled, replicateApiKey, kieEnabled, kieApiKey, klingEnabled, klingAccessKey, klingSecretKey]);
 
   // Fetch models from external providers when provider changes
   const fetchModels = useCallback(async () => {
@@ -100,6 +127,12 @@ export function GenerateVideoNode({ id, data, selected }: NodeProps<GenerateVide
       }
       if (kieApiKey) {
         headers["X-Kie-Key"] = kieApiKey;
+      }
+      if (klingAccessKey) {
+        headers["X-Kling-Access-Key"] = klingAccessKey;
+      }
+      if (klingSecretKey) {
+        headers["X-Kling-Secret-Key"] = klingSecretKey;
       }
       const response = await deduplicatedFetch(`/api/models?provider=${currentProvider}&capabilities=${capabilities}`, { headers });
       if (response.ok) {
@@ -123,7 +156,7 @@ export function GenerateVideoNode({ id, data, selected }: NodeProps<GenerateVide
     } finally {
       setIsLoadingModels(false);
     }
-  }, [currentProvider, replicateApiKey, falApiKey, kieApiKey]);
+  }, [currentProvider, replicateApiKey, falApiKey, kieApiKey, klingAccessKey, klingSecretKey]);
 
   useEffect(() => {
     fetchModels();

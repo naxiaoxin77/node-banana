@@ -21,6 +21,7 @@ function ProviderIcon({ provider }: { provider: ProviderType }) {
     replicate: { bg: "bg-blue-500/20", text: "text-blue-300" },
     openai: { bg: "bg-teal-500/20", text: "text-teal-300" },
     kie: { bg: "bg-orange-500/20", text: "text-orange-300" },
+    kling: { bg: "bg-rose-500/20", text: "text-rose-300" },
     wavespeed: { bg: "bg-purple-500/20", text: "text-purple-300" },
   };
 
@@ -30,6 +31,7 @@ function ProviderIcon({ provider }: { provider: ProviderType }) {
     replicate: "R",
     openai: "O",
     kie: "K",
+    kling: "Kl",
     wavespeed: "W",
   };
 
@@ -52,6 +54,7 @@ function getProviderDisplayName(provider: ProviderType): string {
     replicate: "Replicate",
     openai: "OpenAI",
     kie: "Kie.ai",
+    kling: "Kling",
     wavespeed: "WaveSpeed",
   };
   return names[provider] || provider;
@@ -73,6 +76,9 @@ function getModelUrl(provider: ProviderType, modelId: string): string | null {
   if (provider === "wavespeed") {
     // modelId format: "wavespeed-ai/model-name"
     return `https://wavespeed.ai`;
+  }
+  if (provider === "kling") {
+    return "https://app.klingai.com/global/dev/document-api/apiReference/commonInfo";
   }
   return null;
 }

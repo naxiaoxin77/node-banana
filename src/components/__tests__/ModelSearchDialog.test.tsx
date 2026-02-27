@@ -29,9 +29,12 @@ vi.mock("@/store/workflowStore", () => ({
     replicateApiKey: "test-replicate-key",
     falApiKey: "test-fal-key",
     kieApiKey: null,
+    klingAccessKey: null,
+    klingSecretKey: null,
     wavespeedApiKey: null,
     replicateEnabled: true,
     kieEnabled: false,
+    klingEnabled: false,
   }),
 }));
 
@@ -74,6 +77,7 @@ const defaultProviderSettings: ProviderSettings = {
     replicate: { id: "replicate", name: "Replicate", enabled: true, apiKey: "test-replicate-key" },
     fal: { id: "fal", name: "fal.ai", enabled: true, apiKey: "test-fal-key" },
     kie: { id: "kie", name: "Kie.ai", enabled: false, apiKey: null },
+    kling: { id: "kling", name: "Kling", enabled: false, apiKey: null, apiSecret: null },
     wavespeed: { id: "wavespeed", name: "WaveSpeed", enabled: false, apiKey: null },
   },
 };

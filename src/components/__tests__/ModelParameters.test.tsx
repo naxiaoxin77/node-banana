@@ -15,9 +15,12 @@ const mockUseProviderApiKeys = vi.fn(() => ({
   replicateApiKey: null as string | null,
   falApiKey: null as string | null,
   kieApiKey: null as string | null,
+  klingAccessKey: null as string | null,
+  klingSecretKey: null as string | null,
   wavespeedApiKey: null as string | null,
   replicateEnabled: false,
   kieEnabled: false,
+  klingEnabled: false,
 }));
 
 vi.mock("@/store/workflowStore", () => ({
@@ -718,9 +721,12 @@ describe("ModelParameters", () => {
         replicateApiKey: "test-replicate-key",
         falApiKey: null,
         kieApiKey: null,
+        klingAccessKey: null,
+        klingSecretKey: null,
         wavespeedApiKey: null,
         replicateEnabled: false,
         kieEnabled: false,
+        klingEnabled: false,
       });
 
       (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({

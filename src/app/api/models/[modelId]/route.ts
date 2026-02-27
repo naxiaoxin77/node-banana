@@ -4,12 +4,14 @@
  * Fetches parameter schema for a specific model from its provider.
  * Returns simplified parameter list for UI rendering.
  *
- * GET /api/models/:modelId?provider=replicate|fal|wavespeed
+ * GET /api/models/:modelId?provider=replicate|fal|kie|kling|wavespeed
  *
  * Headers:
  *   - X-Replicate-Key: Required for Replicate models
  *   - X-Fal-Key: Optional for fal.ai models
  *   - X-WaveSpeed-Key: Optional for WaveSpeed models
+ *   - X-Kling-Access-Key: Optional for Kling models
+ *   - X-Kling-Secret-Key: Optional for Kling models
  *
  * Response:
  *   {
@@ -767,6 +769,67 @@ function getKieSchema(modelId: string): ExtractedSchema {
 }
 
 /**
+ * Get hardcoded schema for Kling official models
+ */
+function getKlingSchema(modelId: string): ExtractedSchema {
+  const lower = modelId.toLowerCase();
+  const isImageToVideo = lower.includes("image-to-video") || lower.includes("i2v");
+
+  const parameters: ModelParameter[] = [
+    {
+      name: "aspect_ratio",
+      type: "string",
+      description: "Output aspect ratio",
+      enum: ["16:9", "9:16", "1:1"],
+      default: "16:9",
+    },
+    {
+      name: "duration",
+      type: "string",
+      description: "Video duration in seconds",
+      enum: ["5", "10"],
+      default: "5",
+    },
+    {
+      name: "mode",
+      type: "string",
+      description: "Generation mode",
+      enum: ["std", "pro"],
+      default: "std",
+    },
+    {
+      name: "seed",
+      type: "integer",
+      description: "Random seed for reproducibility",
+      minimum: 0,
+    },
+    {
+      name: "cfg_scale",
+      type: "number",
+      description: "Prompt guidance scale",
+      minimum: 0,
+      maximum: 10,
+    },
+    {
+      name: "camera_control",
+      type: "string",
+      description: "Camera control JSON string",
+    },
+  ];
+
+  const inputs: ModelInput[] = [
+    { name: "prompt", type: "text", required: true, label: "Prompt" },
+    { name: "negative_prompt", type: "text", required: false, label: "Negative Prompt" },
+  ];
+
+  if (isImageToVideo) {
+    inputs.push({ name: "image", type: "image", required: true, label: "Input Image" });
+  }
+
+  return { parameters, inputs };
+}
+
+/**
  * Get static schema for WaveSpeed models (fallback when dynamic schema not available)
  */
 function getStaticWaveSpeedSchema(modelId: string): ExtractedSchema {
@@ -1000,11 +1063,11 @@ export async function GET(
   const decodedModelId = decodeURIComponent(modelId);
   const provider = request.nextUrl.searchParams.get("provider") as ProviderType | null;
 
-  if (!provider || (provider !== "replicate" && provider !== "fal" && provider !== "kie" && provider !== "wavespeed")) {
+  if (!provider || (provider !== "replicate" && provider !== "fal" && provider !== "kie" && provider !== "kling" && provider !== "wavespeed")) {
     return NextResponse.json<SchemaErrorResponse>(
       {
         success: false,
-        error: "Invalid or missing provider. Use ?provider=replicate, ?provider=fal, ?provider=kie, or ?provider=wavespeed",
+        error: "Invalid or missing provider. Use ?provider=replicate, ?provider=fal, ?provider=kie, ?provider=kling, or ?provider=wavespeed",
       },
       { status: 400 }
     );
@@ -1041,6 +1104,8 @@ export async function GET(
     } else if (provider === "kie") {
       // Kie.ai uses hardcoded schemas (no schema discovery API)
       result = getKieSchema(decodedModelId);
+    } else if (provider === "kling") {
+      result = getKlingSchema(decodedModelId);
     } else if (provider === "wavespeed") {
       // WaveSpeed uses dynamic schemas from API, with static fallback
       const apiKey = request.headers.get("X-WaveSpeed-Key") || process.env.WAVESPEED_API_KEY || null;
