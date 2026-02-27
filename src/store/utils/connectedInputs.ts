@@ -250,10 +250,8 @@ export function getConnectedInputsPure(
         // Block non-active outputs (data does not flow through non-matching rules)
         if (!isActive) return;
 
-        // Active output: recursively get upstream text
-        const condInputs = getConnectedInputsPure(sourceNode.id, nodes, edges, _visited, dimmedNodeIds);
-        if (condInputs.text) text = condInputs.text;
-        return; // Skip normal getSourceOutput processing
+        // Active output: ConditionalSwitch is a gate — trigger downstream but don't pass data through
+        return;
       }
 
       const handleId = edge.targetHandle;
