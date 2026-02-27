@@ -32,7 +32,6 @@ const defaultProviderSettings = {
     replicate: { apiKey: "" },
     fal: { apiKey: "" },
     kie: { apiKey: "" },
-    kling: { apiKey: "", apiSecret: "" },
     wavespeed: { apiKey: "" },
     openai: { apiKey: "" },
   },
@@ -58,7 +57,7 @@ function makeNode(data: Record<string, unknown> = {}): WorkflowNode {
       ],
       ...data,
     },
-  } as unknown as WorkflowNode;
+  } as WorkflowNode;
 }
 
 function makeCtx(

@@ -33,7 +33,7 @@ function makeNode(data: Record<string, unknown> = {}): WorkflowNode {
       selectedHistoryIndex: 0,
       ...data,
     },
-  } as unknown as WorkflowNode;
+  } as WorkflowNode;
 }
 
 const defaultProviderSettings = {
@@ -42,7 +42,6 @@ const defaultProviderSettings = {
     replicate: { apiKey: "" },
     fal: { apiKey: "" },
     kie: { apiKey: "" },
-    kling: { apiKey: "", apiSecret: "" },
     wavespeed: { apiKey: "" },
     openai: { apiKey: "" },
   },

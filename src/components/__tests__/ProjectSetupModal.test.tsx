@@ -6,7 +6,6 @@ import { ProviderSettings } from "@/types";
 // Mock the workflow store
 const mockSetUseExternalImageStorage = vi.fn();
 const mockUpdateProviderApiKey = vi.fn();
-const mockUpdateProviderApiSecret = vi.fn();
 const mockToggleProvider = vi.fn();
 const mockUseWorkflowStore = vi.fn();
 
@@ -36,7 +35,6 @@ const defaultProviderSettings: ProviderSettings = {
     replicate: { id: "replicate", name: "Replicate", enabled: false, apiKey: null },
     fal: { id: "fal", name: "fal.ai", enabled: false, apiKey: null },
     kie: { id: "kie", name: "Kie.ai", enabled: false, apiKey: null },
-    kling: { id: "kling", name: "Kling", enabled: false, apiKey: null, apiSecret: null },
     wavespeed: { id: "wavespeed", name: "WaveSpeed", enabled: false, apiKey: null },
   },
 };
@@ -50,7 +48,6 @@ const createDefaultState = (overrides = {}) => ({
   providerSettings: defaultProviderSettings,
   setUseExternalImageStorage: mockSetUseExternalImageStorage,
   updateProviderApiKey: mockUpdateProviderApiKey,
-  updateProviderApiSecret: mockUpdateProviderApiSecret,
   toggleProvider: mockToggleProvider,
   ...overrides,
 });
@@ -63,7 +60,7 @@ describe("ProjectSetupModal", () => {
       if (url === "/api/env-status") {
         return Promise.resolve({
           ok: true,
-          json: () => Promise.resolve({ gemini: false, openai: false, replicate: false, fal: false, kie: false, kling: false, wavespeed: false }),
+          json: () => Promise.resolve({ gemini: false, openai: false, replicate: false, fal: false }),
         });
       }
       // Default success response for other APIs

@@ -203,7 +203,6 @@ interface WorkflowStore {
   // Provider settings actions
   updateProviderSettings: (settings: ProviderSettings) => void;
   updateProviderApiKey: (providerId: ProviderType, apiKey: string | null) => void;
-  updateProviderApiSecret: (providerId: ProviderType, apiSecret: string | null) => void;
   toggleProvider: (providerId: ProviderType, enabled: boolean) => void;
 
   // Model search dialog state
@@ -1530,21 +1529,6 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
     saveProviderSettings(updated);
   },
 
-  updateProviderApiSecret: (providerId: ProviderType, apiSecret: string | null) => {
-    const { providerSettings } = get();
-    const updated: ProviderSettings = {
-      providers: {
-        ...providerSettings.providers,
-        [providerId]: {
-          ...providerSettings.providers[providerId],
-          apiSecret,
-        },
-      },
-    };
-    set({ providerSettings: updated });
-    saveProviderSettings(updated);
-  },
-
   toggleProvider: (providerId: ProviderType, enabled: boolean) => {
     const { providerSettings } = get();
     const updated: ProviderSettings = {
@@ -1731,13 +1715,10 @@ export function useProviderApiKeys() {
       replicateApiKey: state.providerSettings.providers.replicate?.apiKey ?? null,
       falApiKey: state.providerSettings.providers.fal?.apiKey ?? null,
       kieApiKey: state.providerSettings.providers.kie?.apiKey ?? null,
-      klingAccessKey: state.providerSettings.providers.kling?.apiKey ?? null,
-      klingSecretKey: state.providerSettings.providers.kling?.apiSecret ?? null,
       wavespeedApiKey: state.providerSettings.providers.wavespeed?.apiKey ?? null,
       // Provider enabled states (for conditional UI)
       replicateEnabled: state.providerSettings.providers.replicate?.enabled ?? false,
       kieEnabled: state.providerSettings.providers.kie?.enabled ?? false,
-      klingEnabled: state.providerSettings.providers.kling?.enabled ?? false,
     }))
   );
 }

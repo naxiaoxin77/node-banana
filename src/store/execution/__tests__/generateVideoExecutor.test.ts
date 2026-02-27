@@ -12,7 +12,6 @@ const defaultProviderSettings = {
     replicate: { apiKey: "" },
     fal: { apiKey: "fal-key" },
     kie: { apiKey: "" },
-    kling: { apiKey: "", apiSecret: "" },
     wavespeed: { apiKey: "" },
     openai: { apiKey: "" },
   },
@@ -35,7 +34,7 @@ function makeNode(data: Record<string, unknown> = {}): WorkflowNode {
       selectedVideoHistoryIndex: 0,
       ...data,
     },
-  } as unknown as WorkflowNode;
+  } as WorkflowNode;
 }
 
 function makeCtx(

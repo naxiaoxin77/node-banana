@@ -6,7 +6,6 @@ export interface EnvStatusResponse {
   replicate: boolean;
   fal: boolean;
   kie: boolean;
-  kling: boolean;
   wavespeed: boolean;
 }
 
@@ -18,7 +17,6 @@ export async function GET() {
     replicate: !!process.env.REPLICATE_API_KEY,
     fal: !!process.env.FAL_API_KEY,
     kie: !!process.env.KIE_API_KEY,
-    kling: !!(process.env.KLING_ACCESS_KEY && process.env.KLING_SECRET_KEY),
     wavespeed: !!process.env.WAVESPEED_API_KEY,
   };
 

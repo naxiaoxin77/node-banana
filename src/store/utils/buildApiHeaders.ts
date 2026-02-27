@@ -15,7 +15,6 @@ const PROVIDER_HEADER_MAP: Record<ProviderType, string> = {
   replicate: "X-Replicate-API-Key",
   fal: "X-Fal-API-Key",
   kie: "X-Kie-Key",
-  kling: "X-Kling-Access-Key",
   wavespeed: "X-WaveSpeed-Key",
   openai: "X-OpenAI-API-Key",
 };
@@ -38,13 +37,6 @@ export function buildGenerateHeaders(
     const config = providerSettings.providers[providerKey];
     if (config?.apiKey) {
       headers[headerName] = config.apiKey;
-    }
-  }
-
-  if (providerKey === "kling") {
-    const config = providerSettings.providers.kling;
-    if (config?.apiSecret) {
-      headers["X-Kling-Secret-Key"] = config.apiSecret;
     }
   }
 

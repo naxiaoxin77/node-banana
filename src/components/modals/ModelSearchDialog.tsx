@@ -67,12 +67,6 @@ const KieIcon = () => (
   </svg>
 );
 
-const KlingIcon = () => (
-  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M6 3h3.6v7.2L17.4 3H21l-7.2 7.8L21 21h-3.6l-7.8-8.7V21H6V3z" />
-  </svg>
-);
-
 const WaveSpeedIcon = () => (
   <svg className="w-3.5 h-3.5" viewBox="95 140 350 230" fill="currentColor">
     <path d="M308.946 153.758C314.185 153.758 318.268 158.321 317.516 163.506C306.856 237.02 270.334 302.155 217.471 349.386C211.398 354.812 203.458 357.586 195.315 357.586H127.562C117.863 357.586 110.001 349.724 110.001 340.025V333.552C110.001 326.82 113.882 320.731 119.792 317.505C176.087 286.779 217.883 232.832 232.32 168.537C234.216 160.09 241.509 153.758 250.167 153.758H308.946Z" />
@@ -129,7 +123,7 @@ export function ModelSearchDialog({
     trackModelUsage,
   } = useWorkflowStore();
   // Use stable selector for API keys to prevent unnecessary re-fetches
-  const { replicateApiKey, falApiKey, kieApiKey, klingAccessKey, klingSecretKey, wavespeedApiKey } = useProviderApiKeys();
+  const { replicateApiKey, falApiKey, kieApiKey, wavespeedApiKey } = useProviderApiKeys();
   const { screenToFlowPosition } = useReactFlow();
 
   // State
@@ -224,12 +218,6 @@ export function ModelSearchDialog({
       if (kieApiKey) {
         headers["X-Kie-Key"] = kieApiKey;
       }
-      if (klingAccessKey) {
-        headers["X-Kling-Access-Key"] = klingAccessKey;
-      }
-      if (klingSecretKey) {
-        headers["X-Kling-Secret-Key"] = klingSecretKey;
-      }
       if (wavespeedApiKey) {
         headers["X-WaveSpeed-Key"] = wavespeedApiKey;
       }
@@ -266,7 +254,7 @@ export function ModelSearchDialog({
         setIsLoading(false);
       }
     }
-  }, [debouncedSearch, providerFilter, capabilityFilter, replicateApiKey, falApiKey, kieApiKey, klingAccessKey, klingSecretKey, wavespeedApiKey]);
+  }, [debouncedSearch, providerFilter, capabilityFilter, replicateApiKey, falApiKey, kieApiKey, wavespeedApiKey]);
 
   // Fetch models when filters change
   useEffect(() => {
@@ -381,8 +369,6 @@ export function ModelSearchDialog({
         return "bg-yellow-500/20 text-yellow-300";
       case "kie":
         return "bg-orange-500/20 text-orange-300";
-      case "kling":
-        return "bg-emerald-500/20 text-emerald-300";
       case "wavespeed":
         return "bg-purple-500/20 text-purple-300";
       default:
@@ -401,8 +387,6 @@ export function ModelSearchDialog({
         return "fal.ai";
       case "kie":
         return "Kie.ai";
-      case "kling":
-        return "Kling";
       case "wavespeed":
         return "WaveSpeed";
       default:
@@ -462,8 +446,6 @@ export function ModelSearchDialog({
         return `https://fal.ai/models/${model.id}`;
       case "wavespeed":
         return `https://wavespeed.ai`;
-      case "kling":
-        return "https://klingai.com";
       default:
         return null;
     }
@@ -628,17 +610,6 @@ export function ModelSearchDialog({
                 }`}
               >
                 <KieIcon />
-              </button>
-              <button
-                onClick={() => setProviderFilter("kling")}
-                title="Kling"
-                className={`p-2 rounded transition-colors ${
-                  providerFilter === "kling"
-                    ? "bg-emerald-500/20 text-emerald-300"
-                    : "text-neutral-400 hover:text-emerald-300 hover:bg-neutral-700"
-                }`}
-              >
-                <KlingIcon />
               </button>
               <button
                 onClick={() => setProviderFilter("wavespeed")}

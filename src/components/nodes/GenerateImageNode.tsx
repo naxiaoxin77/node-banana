@@ -15,17 +15,7 @@ import { getImageDimensions, calculateNodeSizePreservingHeight } from "@/utils/n
 
 // Provider badge component - shows provider icon for all providers
 function ProviderBadge({ provider }: { provider: ProviderType }) {
-  const providerName = provider === "gemini"
-    ? "Gemini"
-    : provider === "replicate"
-    ? "Replicate"
-    : provider === "kie"
-    ? "Kie.ai"
-    : provider === "kling"
-    ? "Kling"
-    : provider === "wavespeed"
-    ? "WaveSpeed"
-    : "fal.ai";
+  const providerName = provider === "gemini" ? "Gemini" : provider === "replicate" ? "Replicate" : provider === "kie" ? "Kie.ai" : provider === "wavespeed" ? "WaveSpeed" : "fal.ai";
 
   return (
     <span className="text-neutral-500 shrink-0" title={providerName}>
@@ -42,10 +32,6 @@ function ProviderBadge({ provider }: { provider: ProviderType }) {
       ) : provider === "kie" ? (
         <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
           <path d="M6 3h3.5v7L17 3h4l-8 8.5L21 21h-4l-7.5-8.5V21H6V3z" />
-        </svg>
-      ) : provider === "kling" ? (
-        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M6 3h3.6v7.2L17.4 3H21l-7.2 7.8L21 21h-3.6l-7.8-8.7V21H6V3z" />
         </svg>
       ) : provider === "wavespeed" ? (
         <svg className="w-4 h-4" viewBox="95 140 350 230" fill="currentColor">

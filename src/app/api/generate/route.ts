@@ -17,7 +17,6 @@ import { generateWithGemini } from "./providers/gemini";
 import { generateWithReplicate } from "./providers/replicate";
 import { clearFalInputMappingCache as _clearFalInputMappingCache, generateWithFalQueue } from "./providers/fal";
 import { generateWithKie } from "./providers/kie";
-import { generateWithKling } from "./providers/kling";
 import { generateWithWaveSpeed } from "./providers/wavespeed";
 
 // Re-export for backward compatibility (test file imports from route)
@@ -354,77 +353,6 @@ export async function POST(request: NextRequest) {
         image: output.data,
         contentType: "image",
       });
-    }
-
-    if (provider === "kling") {
-      if (!selectedModel?.modelId || !selectedModel?.displayName) {
-        return NextResponse.json<GenerateResponse>(
-          { success: false, error: "selectedModel with modelId and displayName is required for Kling" },
-          { status: 400 }
-        );
-      }
-
-      const klingAccessKey = request.headers.get("X-Kling-Access-Key") || process.env.KLING_ACCESS_KEY;
-      const klingSecretKey = request.headers.get("X-Kling-Secret-Key") || process.env.KLING_SECRET_KEY;
-      if (!klingAccessKey || !klingSecretKey) {
-        return NextResponse.json<GenerateResponse>(
-          {
-            success: false,
-            error: "Kling API keys not configured. Add KLING_ACCESS_KEY and KLING_SECRET_KEY to .env.local or configure in Settings.",
-          },
-          { status: 401 }
-        );
-      }
-
-      const processedImages: string[] = images ? [...images] : [];
-
-      let processedDynamicInputs: Record<string, string | string[]> | undefined = undefined;
-      if (dynamicInputs) {
-        processedDynamicInputs = {};
-        for (const key of Object.keys(dynamicInputs)) {
-          const value = dynamicInputs[key];
-          if (value === null || value === undefined || value === '') {
-            continue;
-          }
-          processedDynamicInputs[key] = value;
-        }
-      }
-
-      const genInput: GenerationInput = {
-        model: {
-          id: selectedModel.modelId,
-          name: selectedModel.displayName,
-          provider: "kling",
-          capabilities: capabilitiesForMediaType(mediaType),
-          description: null,
-        },
-        prompt: prompt || "",
-        images: processedImages,
-        parameters,
-        dynamicInputs: processedDynamicInputs,
-      };
-
-      const result = await generateWithKling(requestId, klingAccessKey, klingSecretKey, genInput);
-
-      if (!result.success) {
-        return NextResponse.json<GenerateResponse>(
-          {
-            success: false,
-            error: result.error || "Generation failed",
-          },
-          { status: 500 }
-        );
-      }
-
-      const output = result.outputs?.[0];
-      if (!output?.data && !output?.url) {
-        return NextResponse.json<GenerateResponse>(
-          { success: false, error: "No output in generation result" },
-          { status: 500 }
-        );
-      }
-
-      return buildMediaResponse(output);
     }
 
     if (provider === "wavespeed") {
