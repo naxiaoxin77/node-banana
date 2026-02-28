@@ -68,9 +68,15 @@ export function computeDimmedNodes(
   // Step 2: Type-aware smart cascade — only un-dim if an active input replaces
   // the SAME data type that was blocked by the disabled Switch output.
   // e.g. a Prompt (text) does NOT rescue a node whose image input is disabled.
+  //
+  // Process nodes in topological order (upstream first) so that by the time we
+  // evaluate a node, all its sources have already been resolved into finalDimmed.
+  // This fixes the convergence bug where a rescued node's downstream was still
+  // treated as dimmed due to arbitrary iteration order.
   const finalDimmed = new Set<string>();
+  const sortedDimmed = topologicalSort(potentiallyDimmed, edges);
 
-  potentiallyDimmed.forEach(nodeId => {
+  sortedDimmed.forEach(nodeId => {
     const incomingEdges = edges.filter(e => e.target === nodeId);
 
     // Collect which handle types are blocked on this node
@@ -105,15 +111,18 @@ export function computeDimmedNodes(
             blockedTypes.add(edge.targetHandle);
           }
         }
-      } else if (potentiallyDimmed.has(edge.source) && edge.targetHandle) {
+      } else if (finalDimmed.has(edge.source) && edge.targetHandle) {
         blockedTypes.add(edge.targetHandle);
       }
     });
 
+    // If no handle types are blocked, this node has no reason to be dimmed
+    if (blockedTypes.size === 0) return;
+
     // Check if any active input provides the same type as a blocked type
     const hasReplacementInput = incomingEdges.some(edge => {
       // Skip dimmed sources
-      if (potentiallyDimmed.has(edge.source)) return false;
+      if (finalDimmed.has(edge.source)) return false;
       // Skip disabled Switch outputs
       const sourceNode = nodes.find(n => n.id === edge.source);
       if (sourceNode?.type === "switch") {
@@ -150,6 +159,55 @@ export function computeDimmedNodes(
   });
 
   return finalDimmed;
+}
+
+/**
+ * Topological sort of a subset of nodes using Kahn's algorithm.
+ * Only considers edges between nodes in the subset.
+ * Returns nodes ordered upstream-first.
+ */
+function topologicalSort(
+  nodeIds: Set<string>,
+  edges: WorkflowEdge[]
+): string[] {
+  // Build in-degree map considering only edges within the subset
+  const inDegree = new Map<string, number>();
+  nodeIds.forEach(id => inDegree.set(id, 0));
+
+  const relevantEdges = edges.filter(
+    e => nodeIds.has(e.source) && nodeIds.has(e.target)
+  );
+
+  relevantEdges.forEach(e => {
+    inDegree.set(e.target, (inDegree.get(e.target) ?? 0) + 1);
+  });
+
+  // Start with nodes that have no incoming edges from within the subset
+  const queue: string[] = [];
+  inDegree.forEach((deg, id) => {
+    if (deg === 0) queue.push(id);
+  });
+
+  const sorted: string[] = [];
+  while (queue.length > 0) {
+    const current = queue.shift()!;
+    sorted.push(current);
+
+    relevantEdges
+      .filter(e => e.source === current)
+      .forEach(e => {
+        const newDeg = (inDegree.get(e.target) ?? 1) - 1;
+        inDegree.set(e.target, newDeg);
+        if (newDeg === 0) queue.push(e.target);
+      });
+  }
+
+  // Append any remaining nodes (cycles) to ensure all are processed
+  nodeIds.forEach(id => {
+    if (!sorted.includes(id)) sorted.push(id);
+  });
+
+  return sorted;
 }
 
 /**
