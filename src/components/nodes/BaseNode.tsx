@@ -14,6 +14,8 @@ interface BaseNodeProps {
   contentClassName?: string;
   minWidth?: number;
   minHeight?: number;
+  /** When true, node has no background/border — content fills the entire node area */
+  fullBleed?: boolean;
 }
 
 export function BaseNode({
@@ -26,6 +28,7 @@ export function BaseNode({
   contentClassName,
   minWidth = 180,
   minHeight = 100,
+  fullBleed = false,
 }: BaseNodeProps) {
   const currentNodeIds = useWorkflowStore((state) => state.currentNodeIds);
   const nodes = useWorkflowStore((state) => state.nodes);
@@ -71,14 +74,16 @@ export function BaseNode({
       />
       <div
         className={`
-          bg-neutral-800 rounded-lg shadow-lg border h-full w-full flex flex-col
-          ${isCurrentlyExecuting || isExecuting ? "border-blue-500 ring-1 ring-blue-500/20" : "border-neutral-700/60"}
-          ${hasError ? "border-red-500" : ""}
-          ${selected ? "border-blue-500 ring-2 ring-blue-500/40 shadow-lg shadow-blue-500/25" : ""}
+          h-full w-full flex flex-col overflow-clip
+          ${fullBleed ? "rounded-lg" : "bg-neutral-800 rounded-lg shadow-lg border"}
+          ${fullBleed ? "" : (isCurrentlyExecuting || isExecuting ? "border-blue-500 ring-1 ring-blue-500/20" : "border-neutral-700/60")}
+          ${fullBleed ? "" : (hasError ? "border-red-500" : "")}
+          ${fullBleed && selected ? "ring-2 ring-blue-500/40 shadow-lg shadow-blue-500/25" : ""}
+          ${!fullBleed && selected ? "border-blue-500 ring-2 ring-blue-500/40 shadow-lg shadow-blue-500/25" : ""}
           ${className}
         `}
       >
-        <div className={contentClassName ?? "px-3 pb-4 flex-1 min-h-0 overflow-hidden flex flex-col"}>{children}</div>
+        <div className={contentClassName ?? (fullBleed ? "flex-1 min-h-0 relative" : "px-3 pb-4 flex-1 min-h-0 overflow-hidden flex flex-col")}>{children}</div>
       </div>
     </>
   );

@@ -353,61 +353,26 @@ function GenerateImageControls({ node }: { node: Node }) {
   return (
     <>
       <div className="space-y-3">
-        {/* Provider Selector */}
+        {/* Model display + Browse */}
         <div>
-          <label className="block text-xs font-medium text-neutral-300 mb-1">Provider</label>
-          <select
-            value={currentProvider}
-            onChange={handleProviderChange}
-            className="nodrag nopan w-full px-2 py-1 text-xs bg-neutral-700 border border-neutral-600 rounded text-neutral-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          >
-            {enabledProviders.map(p => (
-              <option key={p.id} value={p.id}>{p.name}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* Model Selector */}
-        {isGeminiProvider ? (
-          <div>
-            <label className="block text-xs font-medium text-neutral-300 mb-1">Model</label>
-            <select
-              value={nodeData.model || "nano-banana-pro"}
-              onChange={handleModelChange}
-              className="nodrag nopan w-full px-2 py-1 text-xs bg-neutral-700 border border-neutral-600 rounded text-neutral-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
-            >
-              {GEMINI_IMAGE_MODELS.map(m => (
-                <option key={m.value} value={m.value}>{m.label}</option>
-              ))}
-            </select>
-          </div>
-        ) : (
-          <div>
-            <label className="block text-xs font-medium text-neutral-300 mb-1">Model</label>
-            <div className="flex gap-1">
-              <select
-                value={nodeData.selectedModel?.modelId || ""}
-                onChange={handleExternalModelChange}
-                className="nodrag nopan flex-1 px-2 py-1 text-xs bg-neutral-700 border border-neutral-600 rounded text-neutral-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                disabled={isLoadingModels}
-              >
-                <option value="">Select model...</option>
-                {externalModels.map(m => (
-                  <option key={m.id} value={m.id}>{m.name}</option>
-                ))}
-              </select>
-              <button
-                onClick={() => setIsBrowseDialogOpen(true)}
-                className="nodrag nopan px-2 py-1 text-xs bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 rounded text-neutral-300 transition-colors"
-              >
-                Browse
-              </button>
+          <label className="block text-xs font-medium text-neutral-400 mb-1">Model</label>
+          <div className="flex items-center gap-2">
+            <div className="flex-1 min-w-0">
+              <div className="text-sm text-neutral-100 truncate">
+                {nodeData.selectedModel?.displayName || GEMINI_IMAGE_MODELS.find(m => m.value === nodeData.model)?.label || "Select model..."}
+              </div>
+              <div className="text-[10px] text-neutral-500 truncate">
+                {enabledProviders.find(p => p.id === currentProvider)?.name || currentProvider}
+              </div>
             </div>
-            {modelsFetchError && (
-              <p className="text-xs text-red-400 mt-1">{modelsFetchError}</p>
-            )}
+            <button
+              onClick={() => setIsBrowseDialogOpen(true)}
+              className="nodrag nopan shrink-0 px-3 py-1.5 text-xs bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 rounded text-neutral-300 transition-colors"
+            >
+              Browse
+            </button>
           </div>
-        )}
+        </div>
 
         {/* Gemini-specific controls */}
         {isGeminiProvider && (
