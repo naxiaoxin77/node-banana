@@ -32,6 +32,7 @@ export function BaseNode({
 }: BaseNodeProps) {
   const currentNodeIds = useWorkflowStore((state) => state.currentNodeIds);
   const nodes = useWorkflowStore((state) => state.nodes);
+  const setHoveredNodeId = useWorkflowStore((state) => state.setHoveredNodeId);
   const isCurrentlyExecuting = currentNodeIds.includes(id);
   const { getNodes, setNodes } = useReactFlow();
 
@@ -82,6 +83,8 @@ export function BaseNode({
           ${!fullBleed && selected ? "border-blue-500 ring-2 ring-blue-500/40 shadow-lg shadow-blue-500/25" : ""}
           ${className}
         `}
+        onMouseEnter={() => setHoveredNodeId(id)}
+        onMouseLeave={() => setHoveredNodeId(null)}
       >
         <div className={contentClassName ?? (fullBleed ? "flex-1 min-h-0 relative" : "px-3 pb-4 flex-1 min-h-0 overflow-hidden flex flex-col")}>{children}</div>
       </div>

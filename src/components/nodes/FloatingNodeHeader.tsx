@@ -4,6 +4,7 @@ import { ReactNode, useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useReactFlow } from "@xyflow/react";
 import { NodeType } from "@/types";
+import { useWorkflowStore } from "@/store/workflowStore";
 
 export interface CommentNavigationProps {
   currentIndex: number;
@@ -51,7 +52,9 @@ export function FloatingNodeHeader({
   onCommentChange,
   commentNavigation,
 }: FloatingNodeHeaderProps) {
-  const [isHovered, setIsHovered] = useState(false);
+  const [isHeaderHovered, setIsHeaderHovered] = useState(false);
+  const isBodyHovered = useWorkflowStore((state) => state.hoveredNodeId === id);
+  const isHovered = isHeaderHovered || isBodyHovered;
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editTitleValue, setEditTitleValue] = useState(customTitle || "");
   const [isEditingComment, setIsEditingComment] = useState(false);
@@ -278,8 +281,8 @@ export function FloatingNodeHeader({
         width: `${width}px`,
         zIndex: selected ? 10000 : 9000,
       }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseEnter={() => setIsHeaderHovered(true)}
+      onMouseLeave={() => setIsHeaderHovered(false)}
       onMouseDown={handleHeaderMouseDown}
     >
       <div className="px-1 py-1 flex items-center justify-between w-full">
