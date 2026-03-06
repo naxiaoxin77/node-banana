@@ -864,8 +864,23 @@ function EaseCurveControls({ node }: { node: Node }) {
   const updateNodeData = useWorkflowStore((state) => state.updateNodeData);
   const regenerateNode = useWorkflowStore((state) => state.regenerateNode);
   const isRunning = useWorkflowStore((state) => state.isRunning);
+  const edges = useWorkflowStore((state) => state.edges);
+  const removeEdge = useWorkflowStore((state) => state.removeEdge);
   const [showPresets, setShowPresets] = useState(false);
   const presetsButtonRef = useRef<HTMLButtonElement>(null);
+
+  const inheritedEdge = useMemo(() => {
+    return edges.find((e) => e.target === node.id && e.targetHandle === "easeCurve") || null;
+  }, [edges, node.id]);
+
+  const isInherited = !!inheritedEdge;
+
+  const handleBreakInheritance = useCallback(() => {
+    if (inheritedEdge) {
+      removeEdge(inheritedEdge.id);
+      updateNodeData(node.id, { inheritedFrom: null });
+    }
+  }, [inheritedEdge, removeEdge, node.id, updateNodeData]);
 
   const handleBezierChange = useCallback(
     (value: [number, number, number, number]) => {
@@ -907,7 +922,19 @@ function EaseCurveControls({ node }: { node: Node }) {
   }, []);
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 relative">
+      {isInherited && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-neutral-900/80 backdrop-blur-sm rounded z-10">
+          <p className="text-sm text-neutral-200 font-medium">Settings inherited</p>
+          <p className="text-[11px] text-neutral-400 mt-1">Break connection to edit manually</p>
+          <button
+            className="nodrag nopan mt-3 px-3 py-1.5 bg-white/10 hover:bg-white/20 border border-white/20 rounded text-xs text-neutral-200 transition-colors"
+            onClick={handleBreakInheritance}
+          >
+            Control manually
+          </button>
+        </div>
+      )}
       <div>
         <div className="flex items-center justify-between mb-1">
           <label className="block text-xs font-medium text-neutral-300">Easing Function</label>
