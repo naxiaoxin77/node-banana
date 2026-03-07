@@ -216,6 +216,7 @@ export function FloatingNodeHeader({
     if (e.button !== 0) return;
 
     e.preventDefault();
+    e.stopPropagation();
 
     const startX = e.clientX;
     const startY = e.clientY;
@@ -243,15 +244,17 @@ export function FloatingNodeHeader({
     isDraggingRef.current = false;
 
     const handlePointerMove = (e: PointerEvent) => {
-      const { zoom } = getViewport();
-      const dx = (e.clientX - startX) / zoom;
-      const dy = (e.clientY - startY) / zoom;
+      const screenDx = e.clientX - startX;
+      const screenDy = e.clientY - startY;
 
-      if (Math.abs(dx) > 2 || Math.abs(dy) > 2) {
+      if (!isDraggingRef.current && (Math.abs(screenDx) > 5 || Math.abs(screenDy) > 5)) {
         isDraggingRef.current = true;
       }
 
       if (isDraggingRef.current) {
+        const { zoom } = getViewport();
+        const dx = screenDx / zoom;
+        const dy = screenDy / zoom;
         setNodes(nodes => nodes.map(n => {
           const startPos = startPositions.get(n.id);
           if (!startPos) return n;

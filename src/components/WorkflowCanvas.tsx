@@ -1973,6 +1973,7 @@ export function WorkflowCanvas() {
         }
         selectNodesOnDrag={false}
         nodeDragThreshold={5}
+        nodeClickDistance={5}
         zoomOnScroll={false}
         zoomOnPinch={!isModalOpen}
         minZoom={0.1}
