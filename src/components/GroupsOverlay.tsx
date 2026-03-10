@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState, useRef, useEffect } from "react";
-import { useReactFlow, ViewportPortal } from "@xyflow/react";
+import { useViewport, ViewportPortal } from "@xyflow/react";
 import { useWorkflowStore, GROUP_COLORS } from "@/store/workflowStore";
 import { GroupColor } from "@/types";
 
@@ -280,52 +280,58 @@ function GroupControls({ groupId, zoom }: GroupControlsProps) {
       }}
     >
       {/* Floating group name label - top-left, viewport-scaled */}
+      {/* Outer wrapper: zero-height anchor at the top edge of the group */}
       <div
-        className="absolute left-0 pointer-events-auto cursor-grab active:cursor-grabbing select-none"
-        style={{
-          top: -2,
-          transform: `scale(${1 / zoom})`,
-          transformOrigin: "bottom left",
-        }}
-        onMouseDown={handleHeaderMouseDown}
+        className="absolute left-0"
+        style={{ top: 0, height: 0, overflow: "visible" }}
       >
+        {/* Inner scaled element: bottom-anchored so it grows upward, scale keeps bottom-left fixed */}
         <div
-          className="flex items-center rounded-md px-2 py-0.5"
-          style={{ backgroundColor: bgColor }}
+          className="absolute left-0 pointer-events-auto cursor-grab active:cursor-grabbing select-none"
+          style={{
+            bottom: 0,
+            transform: `scale(${1 / zoom})`,
+            transformOrigin: "bottom left",
+            whiteSpace: "nowrap",
+          }}
+          onMouseDown={handleHeaderMouseDown}
         >
-          {isEditing ? (
-            <input
-              ref={inputRef}
-              type="text"
-              value={editName}
-              onChange={(e) => setEditName(e.target.value)}
-              onBlur={handleNameSubmit}
-              onKeyDown={handleKeyDown}
-              className="bg-transparent border-none outline-none text-xs font-medium text-white px-0 py-0"
-              style={{ minWidth: 60, maxWidth: 200, width: `${Math.max(60, editName.length * 7)}px` }}
-            />
-          ) : (
-            <span
-              className="text-xs font-medium text-white truncate cursor-text"
-              style={{ maxWidth: 200 }}
-              onClick={() => setIsEditing(true)}
-            >
-              {group.name}
-            </span>
-          )}
+          <div
+            className="flex items-center rounded-md px-2 py-0.5 mb-1"
+            style={{ backgroundColor: bgColor }}
+          >
+            {isEditing ? (
+              <input
+                ref={inputRef}
+                type="text"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                onBlur={handleNameSubmit}
+                onKeyDown={handleKeyDown}
+                className="bg-transparent border-none outline-none text-xs font-medium text-white px-0 py-0"
+                style={{ minWidth: 60, maxWidth: 200, width: `${Math.max(60, editName.length * 7)}px` }}
+              />
+            ) : (
+              <span
+                className="text-xs font-medium text-white truncate"
+                style={{ maxWidth: 200 }}
+                onDoubleClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
+              >
+                {group.name}
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Floating controls - top-right, viewport-scaled */}
+      {/* Floating controls - top-right, scales naturally with canvas zoom */}
       <div
         className="absolute right-0 pointer-events-auto"
         style={{
-          top: -2,
-          transform: `scale(${1 / zoom})`,
-          transformOrigin: "bottom right",
+          top: -28,
         }}
       >
-        <div className="flex items-center gap-1 rounded-md bg-neutral-800/80 backdrop-blur-sm px-1.5 py-0.5">
+        <div className="flex items-center gap-1 px-1.5 py-0.5">
           {/* Color Picker */}
           <div className="relative flex items-center" ref={colorPickerRef}>
             <button
@@ -486,7 +492,7 @@ export function GroupBackgroundsPortal() {
 // Renders group controls (headers, resize handles) using ViewportPortal above nodes
 export function GroupControlsOverlay() {
   const { groups } = useWorkflowStore();
-  const viewport = useReactFlow().getViewport();
+  const { zoom } = useViewport();
 
   const groupIds = Object.keys(groups);
 
@@ -496,7 +502,7 @@ export function GroupControlsOverlay() {
     <ViewportPortal>
       <div style={{ position: "absolute", top: 0, left: 0, zIndex: 1000, pointerEvents: "none" }}>
         {groupIds.map((groupId) => (
-          <GroupControls key={groupId} groupId={groupId} zoom={viewport.zoom} />
+          <GroupControls key={groupId} groupId={groupId} zoom={zoom} />
         ))}
       </div>
     </ViewportPortal>
