@@ -100,27 +100,36 @@ export function BaseNode({
     const panelEl = settingsPanelRef.current;
     if (!panelEl) return;
 
-    const observer = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        const newPanelHeight = entry.contentRect.height;
-        if (newPanelHeight === 0) continue;
-        const delta = newPanelHeight - trackedSettingsHeightRef.current;
-        if (Math.abs(delta) < 2) continue; // Ignore sub-pixel changes
+    let rafId: number | null = null;
 
-        trackedSettingsHeightRef.current = newPanelHeight;
-        setNodes((nodes) =>
-          nodes.map((node) => {
-            if (node.id !== id) return node;
-            const currentHeight = getNodeDimension(node, "height");
-            const newHeight = Math.max(minHeight, currentHeight + delta);
-            return applyNodeDimensions(node, getNodeDimension(node, "width"), newHeight);
-          })
-        );
-      }
+    const observer = new ResizeObserver((entries) => {
+      if (rafId !== null) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        rafId = null;
+        for (const entry of entries) {
+          const newPanelHeight = entry.contentRect.height;
+          if (newPanelHeight === 0) continue;
+          const delta = newPanelHeight - trackedSettingsHeightRef.current;
+          if (Math.abs(delta) < 2) continue; // Ignore sub-pixel changes
+
+          trackedSettingsHeightRef.current = newPanelHeight;
+          setNodes((nodes) =>
+            nodes.map((node) => {
+              if (node.id !== id) return node;
+              const currentHeight = getNodeDimension(node, "height");
+              const newHeight = Math.max(minHeight, currentHeight + delta);
+              return applyNodeDimensions(node, getNodeDimension(node, "width"), newHeight);
+            })
+          );
+        }
+      });
     });
 
     observer.observe(panelEl);
-    return () => observer.disconnect();
+    return () => {
+      if (rafId !== null) cancelAnimationFrame(rafId);
+      observer.disconnect();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settingsExpanded, settingsPanel]);
 
