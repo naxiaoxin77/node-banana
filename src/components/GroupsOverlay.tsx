@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState, useRef, useEffect } from "react";
-import { useStore, ViewportPortal } from "@xyflow/react";
+import { useViewport, ViewportPortal } from "@xyflow/react";
 import { useWorkflowStore, GROUP_COLORS } from "@/store/workflowStore";
 import { GroupColor } from "@/types";
 
@@ -492,7 +492,7 @@ export function GroupBackgroundsPortal() {
 // Renders group controls (headers, resize handles) using ViewportPortal above nodes
 export function GroupControlsOverlay() {
   const { groups } = useWorkflowStore();
-  const zoom = useStore((s) => s.transform[2]);
+  const { zoom } = useViewport();
 
   const groupIds = Object.keys(groups);
 

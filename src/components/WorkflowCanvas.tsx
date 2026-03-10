@@ -331,11 +331,6 @@ export function WorkflowCanvas() {
 
   // Apply dimming className to nodes downstream of disabled Switch outputs
   const allNodes = useMemo(() => {
-    // Fast path: no dimming active and no stale dimmed classes to clean up
-    if (dimmedNodeIds.size === 0 && !nodes.some((n) => n.className?.includes("switch-dimmed"))) {
-      return nodes;
-    }
-
     return nodes.map((node) => {
       // Never dim Switch or ConditionalSwitch nodes themselves
       if (node.type === "switch" || node.type === "conditionalSwitch") return node;

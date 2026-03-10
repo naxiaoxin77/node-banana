@@ -825,7 +825,7 @@ export function GenerateImageNode({ id, data, selected }: NodeProps<NanoBananaNo
         isOpen={isBrowseDialogOpen}
         onClose={() => setIsBrowseDialogOpen(false)}
         onModelSelected={handleBrowseModelSelect}
-        capabilities={IMAGE_CAPABILITIES}
+        initialCapabilityFilter="image"
       />
     )}
     </>

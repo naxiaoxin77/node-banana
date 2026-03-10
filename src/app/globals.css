@@ -55,6 +55,10 @@ body {
   transition: opacity 250ms ease-in-out;
 }
 
+.react-flow__node:not(.switch-dimmed) {
+  transition: opacity 250ms ease-in-out;
+}
+
 /* Base handle styles */
 .react-flow__handle {
   width: 14px;
