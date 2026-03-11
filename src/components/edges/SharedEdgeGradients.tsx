@@ -10,6 +10,11 @@ const EDGE_COLORS: Record<string, string> = {
   default: "#64748b",
   pause: "#ea580c",
   reference: "#52525b",
+  video: "#a855f7",
+  audio: "#f97316",
+  text: "#2563eb",
+  "3d": "#06b6d4",
+  easeCurve: "#f59e0b",
 };
 
 const SELECTION_STATES = ["active", "dimmed"] as const;

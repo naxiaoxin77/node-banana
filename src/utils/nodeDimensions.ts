@@ -11,7 +11,7 @@ export function getImageDimensions(
   base64DataUrl: string
 ): Promise<{ width: number; height: number } | null> {
   return new Promise((resolve) => {
-    if (!base64DataUrl || !base64DataUrl.startsWith("data:image")) {
+    if (!base64DataUrl || (!base64DataUrl.startsWith("data:image") && !base64DataUrl.startsWith("http"))) {
       resolve(null);
       return;
     }
@@ -103,12 +103,26 @@ export function getMediaDimensions(
     return getImageDimensions(url);
   }
 
-  // data:video/*, blob:*, or http(s) URLs → treat as video
-  if (
-    url.startsWith("data:video") ||
-    url.startsWith("blob:") ||
-    url.startsWith("http")
-  ) {
+  // data:video/* → always video
+  if (url.startsWith("data:video")) {
+    return getVideoDimensions(url);
+  }
+
+  // blob:* → treat as video (most common use case)
+  if (url.startsWith("blob:")) {
+    return getVideoDimensions(url);
+  }
+
+  // http(s) URLs → check pathname for image extensions before defaulting to video
+  if (url.startsWith("http")) {
+    try {
+      const pathname = new URL(url).pathname.toLowerCase();
+      if (/\.(jpe?g|png|gif|webp|bmp|svg|avif|ico)(\?|$)/.test(pathname)) {
+        return getImageDimensions(url);
+      }
+    } catch {
+      // Invalid URL, fall through to video
+    }
     return getVideoDimensions(url);
   }
 

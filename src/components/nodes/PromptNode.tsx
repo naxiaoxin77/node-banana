@@ -6,18 +6,14 @@ import { Handle, Position, NodeProps, Node } from "@xyflow/react";
 import { BaseNode } from "./BaseNode";
 import { useWorkflowStore } from "@/store/workflowStore";
 import { PromptNodeData } from "@/types";
-import { PromptEditorModal } from "@/components/modals/PromptEditorModal";
 
 type PromptNodeType = Node<PromptNodeData, "prompt">;
 
 export function PromptNode({ id, data, selected }: NodeProps<PromptNodeType>) {
   const nodeData = data;
   const updateNodeData = useWorkflowStore((state) => state.updateNodeData);
-  const incrementModalCount = useWorkflowStore((state) => state.incrementModalCount);
-  const decrementModalCount = useWorkflowStore((state) => state.decrementModalCount);
   const getConnectedInputs = useWorkflowStore((state) => state.getConnectedInputs);
   const edges = useWorkflowStore((state) => state.edges);
-  const [isModalOpenLocal, setIsModalOpenLocal] = useState(false);
 
   // Local state for prompt to prevent cursor jumping during typing
   const [localPrompt, setLocalPrompt] = useState(nodeData.prompt);
@@ -75,23 +71,6 @@ export function PromptNode({ id, data, selected }: NodeProps<PromptNodeType>) {
     }
   }, [id, localPrompt, nodeData.prompt, updateNodeData]);
 
-  const handleOpenModal = useCallback(() => {
-    setIsModalOpenLocal(true);
-    incrementModalCount();
-  }, [incrementModalCount]);
-
-  const handleCloseModal = useCallback(() => {
-    setIsModalOpenLocal(false);
-    decrementModalCount();
-  }, [decrementModalCount]);
-
-  const handleSubmitModal = useCallback(
-    (prompt: string) => {
-      updateNodeData(id, { prompt });
-    },
-    [id, updateNodeData]
-  );
-
   const handleSaveVariableName = useCallback(() => {
     updateNodeData(id, { variableName: varNameInput || undefined });
     setShowVarDialog(false);
@@ -133,11 +112,13 @@ export function PromptNode({ id, data, selected }: NodeProps<PromptNodeType>) {
           placeholder={hasIncomingTextConnection ? "Text from connected node (editable)..." : "Describe what to generate..."}
           className="nodrag nopan nowheel w-full h-full p-3 text-xs leading-relaxed text-neutral-100 bg-neutral-800 rounded-lg resize-none focus:outline-none placeholder:text-neutral-500"
         />
-        {nodeData.variableName && (
-          <div className="absolute bottom-2 left-3 z-10 text-[10px] text-blue-400 pointer-events-none">
-            @{nodeData.variableName}
-          </div>
-        )}
+        <button
+          onClick={() => setShowVarDialog(true)}
+          className="nodrag nopan absolute bottom-2 left-3 z-10 text-[10px] text-blue-400 hover:text-blue-300 transition-colors"
+          title="Set variable name"
+        >
+          {nodeData.variableName ? `@${nodeData.variableName}` : "Add variable"}
+        </button>
 
         {/* Text output handle */}
         <Handle
@@ -148,17 +129,6 @@ export function PromptNode({ id, data, selected }: NodeProps<PromptNodeType>) {
           style={{ zIndex: 10 }}
         />
       </BaseNode>
-
-      {/* Prompt Editor Modal - rendered via portal to escape React Flow stacking context */}
-      {isModalOpenLocal && createPortal(
-        <PromptEditorModal
-          isOpen={isModalOpenLocal}
-          initialPrompt={nodeData.prompt}
-          onSubmit={handleSubmitModal}
-          onClose={handleCloseModal}
-        />,
-        document.body
-      )}
 
       {/* Variable Naming Dialog - rendered via portal */}
       {showVarDialog && createPortal(

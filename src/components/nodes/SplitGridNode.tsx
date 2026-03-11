@@ -148,9 +148,9 @@ export function SplitGridNode({ id, data, selected }: NodeProps<SplitGridNodeTyp
             {/* Split button */}
             <button
               onClick={handleSplit}
-              disabled={isRunning || !nodeData.isConfigured}
+              disabled={isRunning || !nodeData.isConfigured || !nodeData.sourceImage}
               className="nodrag nopan px-2 py-0.5 text-[10px] border border-white hover:bg-white hover:text-neutral-900 disabled:border-neutral-600 disabled:text-neutral-600 disabled:cursor-not-allowed text-white rounded transition-colors"
-              title={!nodeData.isConfigured ? "Configure node first" : "Split grid"}
+              title={!nodeData.isConfigured ? "Configure node first" : !nodeData.sourceImage ? "Connect an image first" : "Split grid"}
             >
               Split
             </button>

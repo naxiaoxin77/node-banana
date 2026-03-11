@@ -114,7 +114,8 @@ export function ImageInputNode({ id, data, selected }: NodeProps<ImageInputNodeT
           />
           <button
             onClick={handleRemove}
-            className="absolute top-2 right-2 w-6 h-6 bg-black/60 hover:bg-red-600/80 text-white rounded text-xs opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center"
+            aria-label="Remove image"
+            className="absolute top-2 right-2 w-6 h-6 bg-black/60 hover:bg-red-600/80 text-white rounded text-xs opacity-0 group-hover:opacity-100 focus:opacity-100 focus:ring-1 focus:ring-red-400 transition-all flex items-center justify-center"
           >
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -123,7 +124,16 @@ export function ImageInputNode({ id, data, selected }: NodeProps<ImageInputNodeT
         </div>
       ) : (
         <div
+          role="button"
+          tabIndex={0}
+          aria-label="Upload image"
           onClick={() => fileInputRef.current?.click()}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              fileInputRef.current?.click();
+            }
+          }}
           onDrop={handleDrop}
           onDragOver={handleDragOver}
           className="w-full h-full bg-neutral-900/40 flex flex-col items-center justify-center cursor-pointer hover:bg-neutral-900/60 transition-colors"

@@ -253,6 +253,9 @@ export function LLMGenerateNode({ id, data, selected }: NodeProps<LLMGenerateNod
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <span className="text-white text-xs font-medium">Generation failed</span>
+            {nodeData.error && (
+              <span className="text-red-200 text-[10px] text-center px-3 mt-1 line-clamp-3">{nodeData.error}</span>
+            )}
           </div>
         ) : nodeData.outputText ? (
           <div className="group/text relative w-full h-full bg-neutral-900/40 p-2 overflow-auto nowheel">

@@ -972,7 +972,17 @@ export async function GET(
       includeGemini = true;
     } else if (providerFilter === "kie") {
       // Only Kie requested - no external API calls needed (hardcoded models)
-      includeKie = true;
+      if (kieKey) {
+        includeKie = true;
+      } else {
+        return NextResponse.json<ModelsErrorResponse>(
+          {
+            success: false,
+            error: "Kie API key required. Add KIE_API_KEY to .env.local or configure in Settings.",
+          },
+          { status: 400 }
+        );
+      }
     } else if (providerFilter === "wavespeed") {
       if (wavespeedKey) {
         // WaveSpeed requested with key - fetch from API
