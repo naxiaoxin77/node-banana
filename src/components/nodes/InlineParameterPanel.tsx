@@ -21,15 +21,10 @@ function InlineParameterPanelInner({
 }: InlineParameterPanelProps) {
   const contentRef = useRef<HTMLDivElement>(null);
   const [contentHeight, setContentHeight] = useState(0);
-  // When mounted with expanded=true (e.g. remount after scrolling back into
-  // view), render at full height immediately instead of animating from 0.
-  const mountedExpandedRef = useRef(expanded);
 
   useEffect(() => {
     if (expanded && contentRef.current) {
       setContentHeight(contentRef.current.scrollHeight);
-      // After first measurement, future changes should animate normally
-      mountedExpandedRef.current = false;
     }
   }, [expanded, children]);
 
@@ -62,8 +57,8 @@ function InlineParameterPanelInner({
       {/* Content area — smooth height animation */}
       <div
         id={`params-${nodeId}`}
-        className={`nodrag nopan nowheel bg-[#2a2a2a] overflow-hidden rounded-b-lg ${mountedExpandedRef.current ? "" : "transition-[max-height] duration-150 ease-out"}`}
-        style={{ maxHeight: expanded ? (mountedExpandedRef.current ? "none" : contentHeight) : 0 }}
+        className="nodrag nopan nowheel bg-[#2a2a2a] overflow-hidden transition-[max-height] duration-150 ease-out rounded-b-lg"
+        style={{ maxHeight: expanded ? contentHeight : 0 }}
       >
         <div ref={contentRef} className="px-3 pt-2 pb-3 rounded-b-lg">
           {children}
