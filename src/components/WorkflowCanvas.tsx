@@ -268,6 +268,8 @@ const findScrollableAncestor = (target: HTMLElement, deltaX: number, deltaY: num
 
 /** Shared ref so child components (BaseNode) can check panning state without re-rendering */
 export const isPanningRef = { current: false };
+/** Shared ref so child components (BaseNode) can skip hover updates during node drags */
+export const isDraggingNodeRef = { current: false };
 
 export function WorkflowCanvas() {
   const { nodes, edges, groups, isModalOpen, showQuickstart, navigationTarget, canvasNavigationSettings, dimmedNodeIds } =
@@ -1964,7 +1966,8 @@ export function WorkflowCanvas() {
         onConnectEnd={handleConnectEnd}
         onMoveStart={() => { isPanningRef.current = true; setHoveredNodeId(null); }}
         onMoveEnd={() => { isPanningRef.current = false; }}
-        onNodeDragStop={handleNodeDragStop}
+        onNodeDragStart={() => { isDraggingNodeRef.current = true; }}
+        onNodeDragStop={(event, node) => { isDraggingNodeRef.current = false; handleNodeDragStop(event, node); }}
         onSelectionChange={handleSelectionChange}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
