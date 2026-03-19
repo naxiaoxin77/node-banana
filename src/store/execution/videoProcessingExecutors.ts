@@ -76,7 +76,8 @@ export async function executeVideoStitch(ctx: NodeExecutionContext): Promise<voi
       audioData,
       (progress) => {
         updateNodeData(node.id, { progress: progress.progress });
-      }
+      },
+      { autoExtractAudio: true }
     );
 
     // Revoke old blob URL before replacing
